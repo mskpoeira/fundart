@@ -3,37 +3,191 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fundart Ubatuba</title>
-  <meta name="description" content="Fundação de Arte e Cultura de Ubatuba — ambiente de atualização do novo site.">
-  <style>
-    :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #f5f1e8;
-      color: #3b2a20;
-    }
-    main {
-      width: min(92%, 760px);
-      padding: 48px 32px;
-      border-radius: 24px;
-      background: #fff;
-      box-shadow: 0 20px 60px rgba(59, 42, 32, .12);
-      text-align: center;
-    }
-    h1 { margin: 0 0 12px; font-size: clamp(2rem, 6vw, 4rem); }
-    p { margin: 0; font-size: 1.1rem; line-height: 1.6; }
-    small { display: block; margin-top: 24px; opacity: .65; }
-  </style>
+  <meta name="theme-color" content="#a52d4d">
+  <meta name="description" content="Novo portal institucional da Fundação de Arte e Cultura de Ubatuba — FUNDART.">
+  <title>FundArt — Fundação de Arte e Cultura de Ubatuba</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <main>
-    <h1>Fundart Ubatuba</h1>
-    <p>Novo site em atualização. Este endereço já está preparado para receber automaticamente as publicações do GitHub.</p>
-    <small>fundart.mskpoeira.com.br</small>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+  <div class="color-ribbon" aria-hidden="true"></div>
+
+  <div class="utility-bar">
+    <div class="container utility-inner">
+      <div class="utility-left"><span>Fundação de Arte e Cultura de Ubatuba</span></div>
+      <div class="utility-actions" aria-label="Ferramentas de acessibilidade">
+        <button type="button" class="utility-button" data-font="down" aria-label="Diminuir tamanho da fonte">A−</button>
+        <button type="button" class="utility-button" data-font="up" aria-label="Aumentar tamanho da fonte">A+</button>
+        <button type="button" class="utility-button" data-contrast aria-pressed="false">Alto contraste</button>
+        <a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">Transparência</a>
+        <a href="/ouvidoria.html" class="utility-ouvidoria">Ouvidoria</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="site-header" data-header>
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="FundArt — início">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 54 54"><path d="M8 16h38v5H8zM12 23h6v19h-6zm12 0h6v19h-6zm12 0h6v19h-6zM7 44h40v4H7zM18 10h18l6 5H12z" fill="currentColor"/></svg></span>
+        <span class="brand-copy"><strong>FundArt</strong><small>Fundação de Arte e Cultura de Ubatuba</small></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="main-nav" data-menu-toggle><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="main-nav" aria-label="Navegação principal" data-nav>
+        <a class="is-active" href="#inicio">Início</a>
+        <a href="#agenda">Agenda</a>
+        <a href="#oficinas">Oficinas</a>
+        <a href="#noticias">Notícias</a>
+        <a href="#editais">Editais</a>
+        <a href="#projetos">Projetos e ações</a>
+        <a href="#conselhos">Conselhos</a>
+        <a class="nav-highlight" href="/ouvidoria.html">Ouvidoria</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <section class="hero" id="inicio">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">Cultura pública • Ubatuba</span>
+          <h1>Cultura que encontra <span>Ubatuba.</span></h1>
+          <p>Um portal mais simples, vivo e acessível para acompanhar programação, oficinas, editais, projetos, patrimônio e serviços da FundArt.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#agenda">Ver agenda cultural</a>
+            <a class="button button-secondary" href="https://fundart.com.br/a-fundart/" target="_blank" rel="noopener">Conheça a FundArt</a>
+          </div>
+          <div class="hero-meta" aria-label="Informações da FundArt">
+            <span><strong>Desde 1987</strong><small>cultura e patrimônio</small></span>
+            <span><strong>Seg. a sex.</strong><small>8h às 17h</small></span>
+            <span><strong>Centro</strong><small>Praça Nóbrega, 54</small></span>
+          </div>
+        </div>
+        <article class="hero-feature" aria-label="Destaque cultural">
+          <div class="hero-image" role="img" aria-label="Sede administrativa da FundArt em Ubatuba"></div>
+          <div class="hero-feature-copy">
+            <span class="tag">Destaque</span>
+            <p class="date">Outubro de 2026</p>
+            <h2>Associação Lira Padre Anchieta promove programação musical em outubro</h2>
+            <a href="https://fundart.com.br/" target="_blank" rel="noopener">Confira a programação <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="quick-access" aria-labelledby="acesso-rapido">
+      <div class="container">
+        <div class="section-heading compact"><div><span class="eyebrow">Encontre rápido</span><h2 id="acesso-rapido">Acesso aos principais serviços</h2></div></div>
+        <div class="quick-grid">
+          <a class="quick-card blue" href="#agenda"><span class="quick-icon">▦</span><strong>Agenda cultural</strong><small>Eventos e programação</small></a>
+          <a class="quick-card orange" href="#oficinas"><span class="quick-icon">✦</span><strong>Oficinas</strong><small>Formação cultural</small></a>
+          <a class="quick-card wine" href="#editais"><span class="quick-icon">▤</span><strong>Editais</strong><small>Chamamentos e resultados</small></a>
+          <a class="quick-card green" href="#conselhos"><span class="quick-icon">◉</span><strong>Conselhos</strong><small>Atas, reuniões e composição</small></a>
+          <a class="quick-card gold" href="https://fundart.com.br/institucional/" target="_blank" rel="noopener"><span class="quick-icon">⌕</span><strong>Transparência</strong><small>Acesso à informação</small></a>
+          <a class="quick-card dark featured" href="/ouvidoria.html"><span class="quick-icon">◌</span><strong>Ouvidoria FundArt</strong><small>Decreto nº 9.201/2026</small></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="agenda">
+      <div class="container">
+        <div class="section-heading">
+          <div><span class="eyebrow">O que acontece na cidade</span><h2>Agenda cultural</h2><p>Programação organizada para você descobrir o que fazer hoje, nesta semana e no mês.</p></div>
+          <div class="pill-group" role="group" aria-label="Filtro ilustrativo de agenda"><button class="pill is-active" type="button">Hoje</button><button class="pill" type="button">Esta semana</button><button class="pill" type="button">Este mês</button></div>
+        </div>
+        <div class="event-grid">
+          <article class="event-card event-blue"><div class="event-date"><strong>11</strong><span>OUT</span></div><div class="event-info"><span class="tag">Música</span><h3>Domingo FreeSom com a Banda Lira Padre Anchieta</h3><p>Programação musical especial para o mês de outubro.</p><div class="event-meta"><span>Ubatuba</span><span>Programação cultural</span></div></div></article>
+          <article class="event-card event-wine"><div class="event-date"><strong>27</strong><span>OUT</span></div><div class="event-info"><span class="tag">Artes visuais</span><h3>Exposição “Como te vejo”</h3><p>Nove artistas e diferentes olhares sobre a arte em Ubatuba.</p><div class="event-meta"><span>Sala Tia Helô</span><span>Entrada gratuita</span></div></div></article>
+          <article class="event-card event-orange"><div class="event-date"><strong>OUT</strong><span>2026</span></div><div class="event-info"><span class="tag">Teatro</span><h3>Mês das Crianças no Teatro Municipal</h3><p>Atrações para diferentes públicos, com destaque para espetáculos infantis e atividades em família.</p><div class="event-meta"><span>Teatro Municipal</span><span>Consulte horários</span></div></div></article>
+        </div>
+        <div class="center-action"><a class="text-link" href="https://fundart.com.br/" target="_blank" rel="noopener">Ver programação completa <span aria-hidden="true">→</span></a></div>
+      </div>
+    </section>
+
+    <section class="section section-soft" id="noticias">
+      <div class="container">
+        <div class="section-heading"><div><span class="eyebrow">Informação pública</span><h2>Últimas notícias</h2><p>Notícias, inscrições, comunicados e ações da FundArt em um só lugar.</p></div><a class="button button-small button-secondary" href="https://fundart.com.br/noticias/" target="_blank" rel="noopener">Todas as notícias</a></div>
+        <div class="news-grid">
+          <article class="news-card news-featured"><div class="news-visual visual-literatura"><span>Literatura</span></div><div class="news-body"><p class="date">7 de outubro de 2026</p><h3>Termina hoje o prazo para inscrições no Concurso Literário 2026</h3><p>Iniciativa contempla poesia, poesia estudantil, crônicas, contos e textos de diferentes linguagens.</p><a href="https://fundart.com.br/" target="_blank" rel="noopener">Ler notícia</a></div></article>
+          <article class="news-card"><div class="news-visual visual-artes"><span>Artes visuais</span></div><div class="news-body"><p class="date">5 de outubro de 2026</p><h3>Exposição “Como te vejo” reúne nove artistas</h3><p>Mostra propõe diferentes olhares sobre a arte e permanece aberta ao público durante outubro.</p><a href="https://fundart.com.br/" target="_blank" rel="noopener">Ler notícia</a></div></article>
+          <article class="news-card"><div class="news-visual visual-teatro"><span>Teatro</span></div><div class="news-body"><p class="date">2 de outubro de 2026</p><h3>Teatro Municipal tem programação especial no Mês das Crianças</h3><p>Atividades voltadas às famílias e atrações para diferentes faixas etárias.</p><a href="https://fundart.com.br/" target="_blank" rel="noopener">Ler notícia</a></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="editais">
+      <div class="container split-section">
+        <div class="split-intro"><span class="eyebrow">Oportunidades</span><h2>Editais organizados de verdade.</h2><p>Uma área própria para fomento, credenciamento, premiação, concursos, eventos culturais, licitações, pregões e convocações institucionais.</p><a class="button button-primary" href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">Consultar editais</a></div>
+        <div class="notice-panel">
+          <div class="filter-row" aria-label="Categorias de editais"><span class="filter-chip active">Abertos</span><span class="filter-chip">Encerrados</span><span class="filter-chip">Resultados</span></div>
+          <article class="notice-item"><span class="notice-status">Em destaque</span><div><strong>Seleção de Projetos Culturais — Fomento</strong><small>PNAB, políticas de fomento e ações culturais</small></div><span aria-hidden="true">→</span></article>
+          <article class="notice-item"><span class="notice-status neutral">Categoria</span><div><strong>Credenciamentos</strong><small>Artistas, profissionais, grupos, pareceristas e agentes culturais</small></div><span aria-hidden="true">→</span></article>
+          <article class="notice-item"><span class="notice-status neutral">Categoria</span><div><strong>Concursos, premiações e Cultura Viva</strong><small>Trajetórias, Pontos de Cultura, literatura e outras iniciativas</small></div><span aria-hidden="true">→</span></article>
+          <article class="notice-item"><span class="notice-status neutral">Categoria</span><div><strong>Licitações e pregões eletrônicos</strong><small>Aquisições, serviços e necessidades administrativas</small></div><span aria-hidden="true">→</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-ink" id="oficinas">
+      <div class="container">
+        <div class="section-heading light"><div><span class="eyebrow">Aprender e criar</span><h2>Oficinas culturais</h2><p>Formação artística com acesso mais fácil às modalidades, locais, faixas etárias e inscrições.</p></div><a class="button button-small button-ghost" href="https://fundart.com.br/" target="_blank" rel="noopener">Ver todas</a></div>
+        <div class="workshop-grid">
+          <article><span>01</span><h3>Teatro</h3><p>Expressão, criação cênica e formação artística.</p></article>
+          <article><span>02</span><h3>Dança Jazz</h3><p>Movimento, técnica e vivência corporal.</p></article>
+          <article><span>03</span><h3>Fibras naturais e PANCs</h3><p>Saberes, território, artesanato e natureza.</p></article>
+          <article><span>04</span><h3>Música</h3><p>Formação musical e ações em parceria.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="projetos">
+      <div class="container">
+        <div class="section-heading"><div><span class="eyebrow">Preservar, formar, realizar</span><h2>Projetos, cultura e patrimônio</h2><p>Conteúdos permanentes deixam de disputar espaço com notícias e passam a ter uma organização própria.</p></div></div>
+        <div class="culture-grid">
+          <a class="culture-card tall culture-caiçara" href="https://fundart.com.br/" target="_blank" rel="noopener"><span>Cultura caiçara</span><strong>Memória viva de Ubatuba</strong><small>Conhecer →</small></a>
+          <a class="culture-card culture-patrimonio" href="https://fundart.com.br/" target="_blank" rel="noopener"><span>Patrimônio</span><strong>Equipamentos culturais</strong><small>Explorar →</small></a>
+          <a class="culture-card culture-povos" href="https://fundart.com.br/" target="_blank" rel="noopener"><span>Território</span><strong>Culturas indígena e quilombola</strong><small>Conhecer →</small></a>
+          <a class="culture-card culture-projetos" href="https://fundart.com.br/" target="_blank" rel="noopener"><span>Políticas culturais</span><strong>Projetos e ações</strong><small>Acessar →</small></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-soft" id="conselhos">
+      <div class="container council-grid">
+        <div><span class="eyebrow">Participação social</span><h2>Conselhos com informação clara e histórica.</h2><p>Composição, calendário, pautas, reuniões, convocações, atas, resoluções e documentos organizados por colegiado.</p><a class="text-link" href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">Conhecer os conselhos <span aria-hidden="true">→</span></a></div>
+        <div class="council-list">
+          <div><span>CD</span><strong>Conselho Deliberativo</strong><small>Composição, reuniões e atos</small></div>
+          <div><span>CM</span><strong>Conselho Municipal de Política Cultural</strong><small>Participação e política cultural</small></div>
+          <div><span>CF</span><strong>Conselho Fiscal</strong><small>Documentos e deliberações</small></div>
+          <div><span>GS</span><strong>Grupos Setoriais</strong><small>Representação das linguagens culturais</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="ouvidoria-home">
+      <div class="container ombudsman-card">
+        <div class="ombudsman-icon" aria-hidden="true">◌</div>
+        <div class="ombudsman-copy"><span class="eyebrow">Participação e cidadania</span><h2 id="ouvidoria-home">Ouvidoria da FundArt</h2><p>Canal institucional para manifestações dos usuários dos serviços públicos da Fundação, instituído pelo <strong>Decreto Municipal nº 9.201/2026</strong>.</p><div class="ombudsman-actions"><a class="button button-light" href="/ouvidoria.html">Acessar a Ouvidoria</a><a class="button button-outline-light" href="https://falabr.cgu.gov.br/web/home" target="_blank" rel="noopener">Acessar Fala.BR</a></div></div>
+        <div class="ombudsman-meta"><strong>Ouça. Encaminhe. Acompanhe.</strong><small>Reclamação • denúncia • sugestão • elogio • solicitação</small></div>
+      </div>
+    </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand brand-footer" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 54 54"><path d="M8 16h38v5H8zM12 23h6v19h-6zm12 0h6v19h-6zm12 0h6v19h-6zM7 44h40v4H7zM18 10h18l6 5H12z" fill="currentColor"/></svg></span><span class="brand-copy"><strong>FundArt</strong><small>Fundação de Arte e Cultura de Ubatuba</small></span></a>
+        <p>Praça Nóbrega, 54 — Centro<br>Ubatuba/SP — CEP 11690-153</p>
+        <p>(12) 3833-7000 • (12) 3833-7001<br>Segunda a sexta, das 8h às 17h</p>
+      </div>
+      <div><h3>Institucional</h3><a href="https://fundart.com.br/a-fundart/" target="_blank" rel="noopener">A FundArt</a><a href="#conselhos">Conselhos</a><a href="#projetos">Projetos e ações</a><a href="#noticias">Notícias</a></div>
+      <div><h3>Serviços públicos</h3><a href="#editais">Editais</a><a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">Transparência</a><a href="/ouvidoria.html">Ouvidoria</a><a href="https://falabr.cgu.gov.br/web/home" target="_blank" rel="noopener">SIC / Fala.BR</a></div>
+      <div><h3>Cultura</h3><a href="#agenda">Agenda cultural</a><a href="#oficinas">Oficinas</a><a href="#projetos">Patrimônio</a><a href="#projetos">Equipamentos culturais</a></div>
+    </div>
+    <div class="container footer-bottom"><span>© <span data-year></span> Fundação de Arte e Cultura de Ubatuba</span><span>Portal institucional • versão de modernização</span></div>
+  </footer>
+  <script src="/app.js" defer></script>
 </body>
 </html>
