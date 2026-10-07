@@ -1,0 +1,14 @@
+name: fundart
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fundart-web:latest
+    container_name: fundart-web-prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:63250:80"
+    security_opt:
+      - no-new-privileges:true
