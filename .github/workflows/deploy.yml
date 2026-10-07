@@ -1,0 +1,140 @@
+name: Deploy Fundart
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/**"
+      - "deploy/**"
+      - "Dockerfile"
+      - "docker-compose.prod.yml"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fundart-production
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validar publicação
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Verificar estrutura
+        run: |
+          set -euo pipefail
+          test -f public/index.html
+          test -f Dockerfile
+          test -f docker-compose.prod.yml
+          test -f deploy/fundart.caddy
+
+      - name: Validar Docker Compose
+        run: docker compose -f docker-compose.prod.yml config >/dev/null
+
+  deploy:
+    name: Publicar no VPS Hostinger
+    needs: validate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Atualizar servidor e publicar
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: "120s"
+          command_timeout: "20m"
+          script: |
+            set -Eeuo pipefail
+
+            APP_DIR=/opt/fundart
+            REPO_URL=https://github.com/mskpoeira/fundart.git
+            DOMAIN=fundart.mskpoeira.com.br
+            LOCAL_PORT=63250
+            CADDY_MAIN=/etc/caddy/Caddyfile
+            CADDY_SITE=/etc/caddy/sites/fundart.caddy
+
+            command -v git >/dev/null
+            command -v docker >/dev/null
+            command -v caddy >/dev/null
+            systemctl is-active --quiet caddy
+
+            mkdir -p "$APP_DIR"
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              rm -rf "$APP_DIR"/*
+              git clone "$REPO_URL" "$APP_DIR"
+            else
+              cd "$APP_DIR"
+              git remote set-url origin "$REPO_URL"
+              git fetch --prune origin main
+              git reset --hard origin/main
+              git clean -fd
+            fi
+
+            cd "$APP_DIR"
+
+            OCCUPANT=$(docker ps --format '{{.Names}} {{.Ports}}' | grep "127.0.0.1:${LOCAL_PORT}->" || true)
+            if [ -n "$OCCUPANT" ] && ! printf '%s' "$OCCUPANT" | grep -q '^fundart-web-prod '; then
+              echo "ERRO: porta ${LOCAL_PORT} já está em uso por outro container:"
+              echo "$OCCUPANT"
+              exit 1
+            fi
+
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+            WEB_OK=0
+            for i in $(seq 1 30); do
+              if curl -fsS "http://127.0.0.1:${LOCAL_PORT}/" >/dev/null; then
+                WEB_OK=1
+                break
+              fi
+              sleep 2
+            done
+            [ "$WEB_OK" -eq 1 ]
+
+            install -d -m 755 /etc/caddy/sites
+
+            OTHER_CONFIG=$(grep -nF "$DOMAIN" "$CADDY_MAIN" 2>/dev/null || true)
+            if [ -n "$OTHER_CONFIG" ]; then
+              echo "ERRO: já existe configuração de ${DOMAIN} no Caddy principal."
+              echo "$OTHER_CONFIG"
+              exit 1
+            fi
+
+            install -m 644 deploy/fundart.caddy "$CADDY_SITE"
+
+            CADDY_BACKUP="${CADDY_MAIN}.fundart-backup"
+            cp "$CADDY_MAIN" "$CADDY_BACKUP"
+
+            if ! grep -Fxq 'import /etc/caddy/sites/*.caddy' "$CADDY_MAIN"; then
+              printf '\n# Sites gerenciados por projetos\nimport /etc/caddy/sites/*.caddy\n' >> "$CADDY_MAIN"
+            fi
+
+            if ! caddy validate --config "$CADDY_MAIN"; then
+              cp "$CADDY_BACKUP" "$CADDY_MAIN"
+              rm -f "$CADDY_SITE"
+              echo "ERRO: configuração Caddy inválida; rollback aplicado."
+              exit 1
+            fi
+
+            systemctl reload caddy
+
+            HTTPS_OK=0
+            for i in $(seq 1 30); do
+              if curl -fsS "https://${DOMAIN}/" >/dev/null; then
+                HTTPS_OK=1
+                break
+              fi
+              sleep 2
+            done
+            [ "$HTTPS_OK" -eq 1 ]
+
+            echo "FUNDART_DEPLOY=OK"
+            echo "URL=https://${DOMAIN}"
