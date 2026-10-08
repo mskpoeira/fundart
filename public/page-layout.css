@@ -1,0 +1,90 @@
+.page-v2{
+  --wine:#0a4d91;
+  --wine-dark:#073a75;
+  --blue:#0b74d6;
+  --orange:#f3ba19;
+  --gold:#f3ba19;
+  --green:#15969f;
+  --ink:#0b2d53;
+  --ink-2:#173451;
+  --paper:#f3f7fb;
+  --soft:#edf4fa;
+  --muted:#587089;
+  --line:#dfe8f2;
+  background:#f3f7fb;
+  color:#0b2d53;
+}
+.page-v2 main{background:#f3f7fb}
+.page-v2 .ombudsman-hero{
+  background:
+    radial-gradient(circle at 82% 16%,rgba(255,255,255,.14),transparent 26%),
+    linear-gradient(120deg,#04233f 0%,#073a75 48%,#0a5cab 100%);
+  color:#fff;
+  padding:72px 0;
+}
+.page-v2 .ombudsman-hero h1,
+.page-v2 .section-heading h2,
+.page-v2 .process-grid h2,
+.page-v2 .channel-panel h2,
+.page-v2 .decree-box strong{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.page-v2 .ombudsman-hero h1{font-size:clamp(2.75rem,5vw,4.7rem);font-weight:800;letter-spacing:-.045em}
+.page-v2 .ombudsman-hero h1 span{color:#8fd5ff}
+.page-v2 .ombudsman-hero p{color:#e4f1fb}
+.page-v2 .light-text{color:#9ed2ff}
+.page-v2 .decree-box{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.3);box-shadow:0 18px 40px rgba(0,0,0,.12)}
+.page-v2 .decree-box span{color:#b9ddfb}
+.page-v2 .decree-box p{color:#e4f1fb}
+.page-v2 .eyebrow{color:#0a67b9}
+.page-v2 .section{padding:72px 0}
+.page-v2 .section-soft{background:#eaf2f9}
+.page-v2 .section-heading h2,
+.page-v2 .process-grid h2,
+.page-v2 .channel-panel h2{color:#0b2d53;font-weight:800}
+.page-v2 .section-heading p,
+.page-v2 .process-grid p,
+.page-v2 .channel-panel p{color:#587089}
+.page-v2 .manifest-grid article{
+  border-color:#dfe8f2;
+  border-radius:14px;
+  box-shadow:0 6px 18px rgba(12,48,86,.05);
+}
+.page-v2 .manifest-grid article>span{background:#e0effc;color:#0a5cab}
+.page-v2 .manifest-grid .manifest-info{
+  background:linear-gradient(135deg,#073a75,#0a5cab);
+}
+.page-v2 .manifest-grid .manifest-info>span{background:rgba(255,255,255,.14);color:#fff}
+.page-v2 .manifest-grid .manifest-info p{color:#dcecf8}
+.page-v2 .process-list li{border-color:#cfdde9}
+.page-v2 .process-list li>span{background:#0a5cab}
+.page-v2 .process-list small{color:#587089}
+.page-v2 .channel-panel{
+  border-color:#dfe8f2;
+  border-radius:14px;
+  box-shadow:0 6px 18px rgba(12,48,86,.06);
+}
+.page-v2 .button{border-radius:999px}
+.page-v2 .button-primary{background:#0a5cab;color:#fff}
+.page-v2 .button-primary:hover{background:#073a75}
+.page-v2 .button-secondary{border-color:#b8c9d9;color:#0b2d53}
+.page-v2 .button-secondary:hover{background:#edf4fa}
+.page-v2 .button-light{background:#f3ba19;color:#102b47}
+.page-v2 .button-outline-light{border-color:rgba(255,255,255,.65);color:#fff}
+.page-v2 .v2-service-links a[aria-current="page"]{color:#0a5cab}
+.page-v2 .v2-main-nav a.is-active{background:#0a4d91;color:#fff}
+.page-v2.high-contrast .ombudsman-hero{background:#000}
+.page-v2.high-contrast .manifest-grid article,
+.page-v2.high-contrast .channel-panel{background:#000;color:#fff;border-color:#fff}
+.page-v2.high-contrast .section-soft{background:#000}
+.page-v2.high-contrast .section-heading h2,
+.page-v2.high-contrast .process-grid h2,
+.page-v2.high-contrast .channel-panel h2{color:#fff}
+.page-v2.high-contrast .manifest-grid .manifest-info{background:#000;border-color:#fff}
+@media(max-width:860px){
+  .page-v2 .ombudsman-hero{padding:56px 0}
+}
+@media(max-width:580px){
+  .page-v2 .section{padding:56px 0}
+  .page-v2 .ombudsman-hero h1{font-size:2.5rem}
+}
