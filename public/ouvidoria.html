@@ -3,46 +3,69 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#a52d4d">
+  <meta name="theme-color" content="#073a75">
   <meta name="description" content="Ouvidoria da Fundação de Arte e Cultura de Ubatuba — FUNDART.">
-  <title>Ouvidoria — FundArt</title>
+  <title>Ouvidoria — FUNDART</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/home-layout.css">
+  <link rel="stylesheet" href="/page-layout.css">
 </head>
-<body>
+<body class="home-v2 page-v2">
   <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
-  <div class="color-ribbon" aria-hidden="true"></div>
-  <div class="utility-bar">
-    <div class="container utility-inner">
-      <div class="utility-left"><span>Fundação de Arte e Cultura de Ubatuba</span></div>
-      <div class="utility-actions" aria-label="Ferramentas de acessibilidade">
-        <button type="button" class="utility-button" data-font="down" aria-label="Diminuir tamanho da fonte">A−</button>
-        <button type="button" class="utility-button" data-font="up" aria-label="Aumentar tamanho da fonte">A+</button>
-        <button type="button" class="utility-button" data-contrast aria-pressed="false">Alto contraste</button>
-        <a href="https://webmail.ubatuba.sp.gov.br" target="_blank" rel="noopener">Webmail</a>
-        <a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">Transparência</a>
-        <a href="/ouvidoria.html" class="utility-ouvidoria">Ouvidoria</a>
+
+  <header class="v2-header">
+    <div class="v2-top container">
+      <a class="v2-brand" href="/" aria-label="FUNDART — início">
+        <svg class="v2-logo" viewBox="0 0 74 82" role="img" aria-label="Marca gráfica FundArt">
+          <path d="M12 66V18c0-7 4-12 9-12s9 5 9 12v48" fill="none" stroke="#c9b31a" stroke-width="9" stroke-linecap="round"/>
+          <path d="M27 66V24c0-7 4-12 9-12s9 5 9 12v42" fill="none" stroke="#da2734" stroke-width="9" stroke-linecap="round"/>
+          <path d="M43 66V30c0-7 4-12 9-12s9 5 9 12v36" fill="none" stroke="#f08a22" stroke-width="9" stroke-linecap="round"/>
+          <path d="M16 66c4-20 14-31 26-31s22 11 26 31" fill="#0a4d83"/>
+          <path d="M28 66c2-11 7-17 14-17s12 6 14 17" fill="#15969f"/>
+        </svg>
+        <span class="v2-brand-text"><strong>FUNDART</strong><small>FUNDAÇÃO DE ARTE E CULTURA<br>DE UBATUBA</small></span>
+      </a>
+
+      <div class="v2-tools">
+        <div class="v2-a11y">
+          <span aria-hidden="true">●</span><strong>Acessibilidade</strong>
+          <button type="button" data-font="up" aria-label="Aumentar fonte">A+</button>
+          <button type="button" data-font="down" aria-label="Diminuir fonte">A−</button>
+          <button type="button" data-contrast aria-pressed="false">◉ Alto contraste</button>
+        </div>
+        <form class="v2-search" action="https://fundart.com.br/" method="get" target="_blank">
+          <label class="sr-only" for="v2-search-field">Buscar no site</label>
+          <input id="v2-search-field" name="s" type="search" placeholder="Buscar no site...">
+          <button type="submit" aria-label="Buscar">⌕</button>
+        </form>
+        <nav class="v2-service-links" aria-label="Serviços institucionais">
+          <a href="https://webmail.ubatuba.sp.gov.br" target="_blank" rel="noopener"><span>✉</span> Webmail<small>ubatuba.sp.gov.br</small></a>
+          <a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener"><span>♟</span> Portal da<br>Transparência</a>
+          <a href="https://falabr.cgu.gov.br/web/home" target="_blank" rel="noopener">SIC</a>
+          <a href="/ouvidoria.html" aria-current="page"><span>▣</span> Ouvidoria<br>da FUNDART</a>
+          <a href="https://fundart.com.br/contato/" target="_blank" rel="noopener"><span>□</span> Contato</a>
+        </nav>
       </div>
     </div>
-  </div>
-  <header class="site-header" data-header>
-    <div class="container header-inner">
-      <a class="brand" href="/" aria-label="FundArt — início">
-        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 54 54"><path d="M8 16h38v5H8zM12 23h6v19h-6zm12 0h6v19h-6zm12 0h6v19h-6zM7 44h40v4H7zM18 10h18l6 5H12z" fill="currentColor"/></svg></span>
-        <span class="brand-copy"><strong>FundArt</strong><small>Fundação de Arte e Cultura de Ubatuba</small></span>
-      </a>
-      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="main-nav" data-menu-toggle><span></span><span></span><span></span></button>
-      <nav class="main-nav" id="main-nav" aria-label="Navegação principal" data-nav>
-        <a href="/">Início</a>
-        <a href="/#agenda">Agenda</a>
-        <a href="/#oficinas">Oficinas</a>
-        <a href="/#noticias">Notícias</a>
-        <a href="/#editais">Editais</a>
-        <a href="/#conselhos">Conselhos</a>
-        <a class="nav-highlight is-active" href="/ouvidoria.html">Ouvidoria</a>
-      </nav>
+
+    <div class="v2-nav-wrap">
+      <div class="container v2-nav-row">
+        <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="main-nav" data-menu-toggle><span></span><span></span><span></span></button>
+        <nav class="main-nav v2-main-nav" id="main-nav" aria-label="Navegação principal" data-nav>
+          <a href="/#inicio">Início</a>
+          <a href="https://fundart.com.br/a-fundart/" target="_blank" rel="noopener">A FundArt⌄</a>
+          <a href="/#agenda">Agenda⌄</a>
+          <a href="https://fundart.com.br/" target="_blank" rel="noopener">Oficinas⌄</a>
+          <a href="https://fundart.com.br/institucional/editais/" target="_blank" rel="noopener">Editais⌄</a>
+          <a href="/#acessos">Projetos e Ações⌄</a>
+          <a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">Conselhos⌄</a>
+          <a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">Transparência⌄</a>
+          <a class="is-active" href="/ouvidoria.html" aria-current="page">Ouvidoria⌄</a>
+        </nav>
+      </div>
     </div>
   </header>
 
@@ -51,7 +74,7 @@
       <div class="container ombudsman-hero-grid">
         <div>
           <span class="eyebrow light-text">Participação e cidadania</span>
-          <h1>Ouvidoria da <span>FundArt</span></h1>
+          <h1>Ouvidoria da <span>FUNDART</span></h1>
           <p>Canal institucional de escuta, orientação, encaminhamento e acompanhamento das manifestações dos usuários dos serviços públicos da Fundação de Arte e Cultura de Ubatuba.</p>
           <div class="hero-actions">
             <a class="button button-light" href="https://falabr.cgu.gov.br/web/home" target="_blank" rel="noopener">Registrar manifestação no Fala.BR</a>
@@ -118,22 +141,32 @@
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-grid">
-      <div class="footer-brand">
-        <a class="brand brand-footer" href="/">
-          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 54 54"><path d="M8 16h38v5H8zM12 23h6v19h-6zm12 0h6v19h-6zm12 0h6v19h-6zM7 44h40v4H7zM18 10h18l6 5H12z" fill="currentColor"/></svg></span>
-          <span class="brand-copy"><strong>FundArt</strong><small>Fundação de Arte e Cultura de Ubatuba</small></span>
+  <footer class="v2-footer">
+    <div class="container v2-footer-grid">
+      <div class="v2-footer-brand">
+        <a class="v2-brand footer" href="/">
+          <svg class="v2-logo" viewBox="0 0 74 82" aria-hidden="true">
+            <path d="M12 66V18c0-7 4-12 9-12s9 5 9 12v48" fill="none" stroke="#c9b31a" stroke-width="9" stroke-linecap="round"/>
+            <path d="M27 66V24c0-7 4-12 9-12s9 5 9 12v42" fill="none" stroke="#da2734" stroke-width="9" stroke-linecap="round"/>
+            <path d="M43 66V30c0-7 4-12 9-12s9 5 9 12v36" fill="none" stroke="#f08a22" stroke-width="9" stroke-linecap="round"/>
+            <path d="M16 66c4-20 14-31 26-31s22 11 26 31" fill="#0a4d83"/><path d="M28 66c2-11 7-17 14-17s12 6 14 17" fill="#15969f"/>
+          </svg>
+          <span class="v2-brand-text"><strong>FUNDART</strong><small>FUNDAÇÃO DE ARTE E CULTURA<br>DE UBATUBA</small></span>
         </a>
-        <p>Praça Nóbrega, 54 — Centro<br>Ubatuba/SP — CEP 11690-153</p>
-        <p>(12) 3833-7000 • (12) 3833-7001<br>Segunda a sexta, das 8h às 17h</p>
       </div>
-      <div><h3>Institucional</h3><a href="https://fundart.com.br/a-fundart/" target="_blank" rel="noopener">A FundArt</a><a href="/#conselhos">Conselhos</a><a href="/#projetos">Projetos e ações</a></div>
-      <div><h3>Serviços públicos</h3><a href="/#editais">Editais</a><a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">Transparência</a><a href="/ouvidoria.html">Ouvidoria</a><a href="https://falabr.cgu.gov.br/web/home" target="_blank" rel="noopener">SIC / Fala.BR</a><a href="https://webmail.ubatuba.sp.gov.br" target="_blank" rel="noopener">Webmail institucional</a></div>
-      <div><h3>Cultura</h3><a href="/#agenda">Agenda cultural</a><a href="/#oficinas">Oficinas</a><a href="/#projetos">Patrimônio</a></div>
+      <div class="v2-contact">
+        <p>⌖ Praça Nóbrega, 54 - Centro, Ubatuba/SP</p>
+        <p>☎ (12) 3833-7000</p>
+        <p>✉ fundart@fundart.com.br</p>
+        <p>◷ Segunda a sexta-feira, das 8h às 17h</p>
+      </div>
+      <div><h3>Links úteis</h3><a href="https://fundart.com.br/a-fundart/" target="_blank" rel="noopener">› A FundArt</a><a href="/#agenda">› Agenda Cultural</a><a href="https://fundart.com.br/" target="_blank" rel="noopener">› Oficinas</a><a href="https://fundart.com.br/institucional/editais/" target="_blank" rel="noopener">› Editais e Chamamentos</a><a href="/#acessos">› Projetos e Ações</a><a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">› Conselhos</a></div>
+      <div><h3>Serviços públicos</h3><a href="/ouvidoria.html">› Ouvidoria da FUNDART</a><a href="https://fundart.com.br/institucional/" target="_blank" rel="noopener">› Portal da Transparência</a><a href="https://falabr.cgu.gov.br/web/home" target="_blank" rel="noopener">› SIC / Acesso à Informação</a><a class="webmail-footer" href="https://webmail.ubatuba.sp.gov.br" target="_blank" rel="noopener">✉ Webmail.ubatuba.sp.gov.br</a><a href="#">› LGPD</a><a href="https://fundart.com.br/perguntas-frequentes/" target="_blank" rel="noopener">› Perguntas Frequentes</a><a href="https://fundart.com.br/contato/" target="_blank" rel="noopener">› Contato</a></div>
+      <div class="v2-social"><h3>Redes sociais</h3><div><a href="#" aria-label="Instagram">◎</a><a href="#" aria-label="Facebook">●</a><a href="#" aria-label="YouTube">▶</a></div><span class="v2-city-mark">🛡️<small>Prefeitura Municipal<br>de Ubatuba</small></span></div>
     </div>
-    <div class="container footer-bottom"><span>© <span data-year></span> Fundação de Arte e Cultura de Ubatuba</span><span>Portal institucional • versão de modernização</span></div>
+    <div class="container v2-footer-bottom"><span>© <span data-year></span> Fundação de Arte e Cultura de Ubatuba — FUNDART. Todos os direitos reservados.</span><span><a href="#">Declaração de Acessibilidade</a> | <a href="#">Política de Privacidade</a> | <a href="#">Mapa do Site</a></span></div>
   </footer>
+
   <script src="/app.js" defer></script>
 </body>
 </html>
