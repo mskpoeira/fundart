@@ -97,3 +97,20 @@
 .page-v2 .button-lai:hover{background:#d8edff}
 .page-v2 .channel-actions{max-width:520px}
 .page-v2.high-contrast .button-lai{background:#fff;color:#000;border-color:#fff}
+
+.scope-banner{background:#eaf2f9;padding:22px 0 0}
+.scope-alert{display:grid;grid-template-columns:42px 1fr;gap:14px;align-items:start;background:#fff;border:1px solid #b8d4ec;border-left:5px solid #0a5cab;border-radius:14px;padding:18px 20px;box-shadow:0 6px 18px rgba(12,48,86,.05)}
+.scope-alert .scope-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#0a5cab;color:#fff;font-weight:800;font-size:.9rem}
+.scope-alert strong{display:block;color:#073a75;font-size:1rem;margin-bottom:5px}
+.scope-alert p{margin:0;color:#405e79;font-size:.86rem;line-height:1.55}
+.scope-tag{display:inline-flex;margin-top:16px;padding:5px 9px;border-radius:999px;background:#e6f2fc;color:#0a5cab;font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.page-v2 .manifest-info .scope-tag{background:rgba(255,255,255,.14);color:#fff}
+.page-v2.high-contrast .scope-banner{background:#000}
+.page-v2.high-contrast .scope-alert{background:#000;border-color:#fff;border-left-color:#fff}
+.page-v2.high-contrast .scope-alert strong,.page-v2.high-contrast .scope-alert p{color:#fff}
+.page-v2.high-contrast .scope-alert .scope-icon{background:#fff;color:#000}
+.page-v2.high-contrast .scope-tag{background:#fff;color:#000}
+@media(max-width:580px){
+  .scope-alert{grid-template-columns:1fr;padding:16px}
+  .scope-alert .scope-icon{width:30px;height:30px}
+}
