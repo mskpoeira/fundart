@@ -88,3 +88,12 @@
   .page-v2 .section{padding:56px 0}
   .page-v2 .ombudsman-hero h1{font-size:2.5rem}
 }
+
+.page-v2 .decree-link{display:block;color:#fff;transition:transform .2s,background .2s,border-color .2s}
+.page-v2 .decree-link:hover{transform:translateY(-3px);background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.5)}
+.page-v2 .decree-download{display:block;margin-top:16px;color:#fff;font-size:.72rem;font-weight:800}
+.page-v2 .manifest-card-link{display:inline-flex;margin-top:16px;color:#fff;font-size:.76rem;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.page-v2 .button-lai{background:#e9f4ff;border-color:#8fc1ea;color:#073a75}
+.page-v2 .button-lai:hover{background:#d8edff}
+.page-v2 .channel-actions{max-width:520px}
+.page-v2.high-contrast .button-lai{background:#fff;color:#000;border-color:#fff}
