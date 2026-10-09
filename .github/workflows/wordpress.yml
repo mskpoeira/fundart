@@ -52,7 +52,12 @@ jobs:
             cd "$APP_DIR"
             git fetch origin main
             git reset --hard origin/main
-            ENV_FILE=.env.wp
+            install -d -m 700 /opt/fundart-secrets
+            ENV_FILE=/opt/fundart-secrets/wordpress.env
+            if [ ! -f "$ENV_FILE" ] && [ -f .env.wp ]; then
+              mv .env.wp "$ENV_FILE"
+              chmod 600 "$ENV_FILE"
+            fi
             if [ ! -f "$ENV_FILE" ]; then
               {
                 printf 'FUNDART_DB_PASSWORD=%s\n' "$(openssl rand -hex 32)"
