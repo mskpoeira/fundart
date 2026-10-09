@@ -1,0 +1,30 @@
+name: Inspecionar conteudo publico original
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-content-shape.yml"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "4m"
+          script: |
+            set -eu
+            for path in /edital/edital-no-62-2025-credenciamento-no-03-2025-projeto-de-oficinas-culturais-arte-para-todos-2026/ /pontos-mis-esta-com-inscricoes-abertas-para-oficina-no-rastro-da-emocao/ /a-fundart/; do
+              url="https://fundart.com.br$path"
+              curl -sL --max-time 14 "$url" -o /tmp/fundart-sample.html -w "PATH=$path HTTP=%{http_code} SIZE=%{size_download}\n" || true
+              python3 - <<'PY'
+            import re
+            s=open('/tmp/fundart-sample.html',encoding='utf8',errors='replace').read()
+            print('entry-content',len(re.findall(r'entry-content',s)),'post-content',len(re.findall(r'post-content',s)),'wpb_wrapper',len(re.findall(r'wpb_wrapper',s)),'article',len(re.findall(r'<article\b',s)),'main',len(re.findall(r'<main\b',s)),'body_size',len(s))
+            PY
+            done
+            rm -f /tmp/fundart-sample.html
