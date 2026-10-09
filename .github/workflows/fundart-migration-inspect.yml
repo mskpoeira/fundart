@@ -1,0 +1,35 @@
+name: FUNDART - Diagnosticar HTML para migracao
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-migration-inspect.yml"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "4m"
+          script: |
+            set -eu
+            python3 - <<'PY'
+            import urllib.request,re,html
+            for path in ('/a-fundart/','/objetivos/','/equipe/','/institucional/','/edital/edital-no-62-2025-credenciamento-no-03-2025-projeto-de-oficinas-culturais-arte-para-todos-2026/'):
+                try:
+                    r=urllib.request.urlopen(urllib.request.Request('https://fundart.com.br'+path,headers={'User-Agent':'Mozilla/5.0'}),timeout=18)
+                    s=r.read().decode('utf-8','replace')
+                    title=re.search(r'<title[^>]*>(.*?)</title>',s,re.I|re.S)
+                    desc=re.search(r'<meta[^>]*name=["\\']description["\\'][^>]*content=["\\'](.*?)["\\']',s,re.I|re.S)
+                    print('PATH',path,'HTTP',r.status,'SIZE',len(s),'TITLE',html.unescape(title.group(1))[:90] if title else 'none','DESCRIPTION',html.unescape(desc.group(1))[:120] if desc else 'none')
+                    for token in ('elementor','entry-content','wpb_wrapper','the7','vc_row','wp-block','fundart'):
+                        print('TOKEN',token,'COUNT',s.lower().count(token))
+                    m=re.search(r'<main[^>]*>',s,re.I)
+                    print('MAIN_START',s[m.start():m.start()+140] if m else 'notfound')
+                except Exception as e: print('ERROR',path,type(e).__name__)
+            PY
