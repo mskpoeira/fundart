@@ -1,4 +1,5 @@
 name: Recuperar WordPress FUNDART (isolado)
+# Retry with corrected escaping of PHP variables
 on:
   push:
     branches: [main]
