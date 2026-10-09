@@ -27,6 +27,9 @@ jobs:
             git fetch -q origin main
             git show origin/main:docker-compose.wordpress.staging.yml > docker-compose.wordpress.staging.yml
             git show origin/main:wordpress/bootstrap.php > wordpress/bootstrap.php
+            find wordpress/themes/fundart -type d -exec chmod 755 {} +
+            find wordpress/themes/fundart -type f -exec chmod 644 {} +
+            chmod 644 wordpress/bootstrap.php
             ENV_FILE=/opt/fundart-secrets/wordpress-staging.env
             test -f "$ENV_FILE"
             set -a
