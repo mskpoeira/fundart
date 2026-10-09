@@ -32,5 +32,9 @@ jobs:
             docker exec fundart-wp-app php -l /var/www/html/wp-config.php
             echo "=== WP CONFIG ==="
             docker exec fundart-wp-app php -r '$s=getenv("WORDPRESS_CONFIG_EXTRA"); $p=proc_open("php -l",[0=>["pipe","r"],1=>["pipe","w"],2=>["pipe","w"]],$pipes); if(is_resource($p)){fwrite($pipes[0],"<?php\n".$s);fclose($pipes[0]); $o=stream_get_contents($pipes[1]);fclose($pipes[1]); $e=stream_get_contents($pipes[2]);fclose($pipes[2]); echo "EXTRA_PHP_LINT_EXIT=".proc_close($p).PHP_EOL;}' || true
+                        echo "=== HTML RESPONSE ==="
+            curl -s --max-time 8 http://127.0.0.1:63251/wp-login.php | python3 -c 'import sys,re,html; s=sys.stdin.read(); s=re.sub(r"<script[\\s\\S]*?</script>|<style[\\s\\S]*?</style>","",s,flags=re.I); s=re.sub(r"<[^>]+>"," ",s); s=html.unescape(s); print("BODY_TEXT=" + re.sub(r"\\s+"," ",s).strip()[:350])'
+            echo "=== DB CONNECTION ==="
+            docker exec fundart-wp-app php -r '$h=getenv("WORDPRESS_DB_HOST");$n=getenv("WORDPRESS_DB_NAME");$u=getenv("WORDPRESS_DB_USER");$p=getenv("WORDPRESS_DB_PASSWORD");try{$db=new mysqli(explode(":",$h)[0],$u,$p,$n);echo "DB_CONNECT=OK\\n";$db->close();}catch(Throwable $e){echo "DB_CONNECT=FAILED TYPE=".get_class($e)."\\n";}' || true
             echo "=== RECENT ERRORS (REDACTED) ==="
             docker logs --tail 24 fundart-wp-app 2>&1 | sed -E 's/(password|passwd|secret|token|key)=([^ ,;]+)/\1=[REDACTED]/Ig' | tail -24
