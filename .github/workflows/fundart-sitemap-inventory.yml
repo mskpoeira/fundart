@@ -1,0 +1,46 @@
+name: Inventariar sitemaps FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-sitemap-inventory.yml"]
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "6m"
+          script: |
+            set -eu
+            python3 - <<'PY'
+            import urllib.request,xml.etree.ElementTree as ET,urllib.parse,collections
+            heads={'User-Agent':'Mozilla/5.0 (compatible; FundartPortalMigration/1.0)'}
+            def fetch(url):
+                req=urllib.request.Request(url,headers=heads)
+                with urllib.request.urlopen(req,timeout=20) as resp:
+                    return resp.read(5000000)
+            for rooturl in ['https://fundart.com.br/wp-sitemap.xml','https://fundart.com.br/sitemap_index.xml']:
+                try:
+                    root=ET.fromstring(fetch(rooturl))
+                    nodes=[e.text for e in root.iter() if e.tag.endswith('loc') and e.text]
+                    print('ROOT',rooturl,'TAG',root.tag,'CHILD_LINKS',len(nodes))
+                    if 'sitemapindex' in root.tag:
+                        total=0
+                        for sub in nodes[:35]:
+                            try:
+                                subroot=ET.fromstring(fetch(sub))
+                                urls=[e.text for e in subroot.iter() if e.tag.endswith('loc') and e.text]
+                                total+=len(urls)
+                                print('SITEMAP',urllib.parse.urlparse(sub).path,'COUNT',len(urls),'EXAMPLE',urllib.parse.urlparse(urls[0]).path if urls else 'none')
+                            except Exception as ex: print('SUB_ERROR',urllib.parse.urlparse(sub).path,type(ex).__name__)
+                        print('TOTAL_URLS_FIRST35',total)
+                    else:
+                        print('EXAMPLES',[urllib.parse.urlparse(x).path for x in nodes[:10]])
+                except Exception as ex: print('ROOT_ERROR',rooturl,type(ex).__name__,str(ex)[:90])
+            PY
