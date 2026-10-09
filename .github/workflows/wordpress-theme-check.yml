@@ -1,0 +1,26 @@
+name: Diagnosticar tema FUNDART homologacao
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/wordpress-theme-check.yml"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "4m"
+          script: |
+            set -eu
+            echo "=== HOST THEME ==="
+            ls -la /opt/fundart/wordpress/themes/fundart | head -12
+            echo "=== APP THEME ==="
+            docker exec fundart-wp-staging-app sh -c 'ls -la /var/www/html/wp-content/themes/fundart | head -12; sed -n "1,12p" /var/www/html/wp-content/themes/fundart/style.css'
+            echo "=== WPCLI MOUNT ==="
+            docker run --rm --network none --user 33:33 --mount type=volume,src=fundart-wordpress-staging_fundart_staging_wp,dst=/var/www/html --mount type=bind,src=/opt/fundart/wordpress/themes/fundart,dst=/var/www/html/wp-content/themes/fundart,readonly wordpress:cli-php8.3 sh -c 'ls -la /var/www/html/wp-content/themes/fundart | head -12; sed -n "1,12p" /var/www/html/wp-content/themes/fundart/style.css'
