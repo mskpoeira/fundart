@@ -3,7 +3,7 @@ Theme Name: FUNDART Portal Cultural
 Theme URI: https://fundart.mskpoeira.com.br/
 Author: Projeto Fundart
 Description: Tema institucional da Fundação de Arte e Cultura de Ubatuba, preservando o layout aprovado e com administração WordPress.
-Version: 1.0.0
+Version: 1.1.0
 Requires at least: 6.4
 Requires PHP: 8.1
 Text Domain: fundart
@@ -22,3 +22,56 @@ Text Domain: fundart
 @media(max-width:1050px){.header-main{flex-wrap:wrap;padding:10px 0}.header-right{flex:1}.quick-grid{grid-template-columns:repeat(4,1fr)}.footer-cols{grid-template-columns:repeat(3,1fr)}.toplinks{flex-wrap:wrap}}
 @media(max-width:760px){.header-main{display:block}.brand{justify-content:center}.brand-text strong{font-size:1.3rem}.header-right{justify-content:center;padding:8px 0}.access{display:none}.menu-toggle{display:block;background:#0a4d91;color:white;border:0;padding:12px 16px;border-radius:7px;margin:10px 0}.main-nav{display:none}.main-nav.open{display:block}.main-nav ul{display:block}.main-nav .sub-menu{display:block;position:static;box-shadow:none}.main-nav a{padding:12px}.quick-grid{grid-template-columns:repeat(2,1fr)}.event-grid,.news-grid,.two-col,.access-grid{grid-template-columns:1fr}.footer-cols{grid-template-columns:repeat(2,1fr)}.hero{min-height:290px}}
 @media(max-width:420px){.footer-cols{grid-template-columns:1fr}.copyright{flex-direction:column}.toplinks{justify-content:center}}
+/* FUNDART — identidade visual unificada (home + paginas internas) */
+:root{--azul:#075b9e;--navy:#062c4c;--gold:#ffbd38;--light:#f2f6fa;--surface:#fff;--shadow:0 12px 34px rgba(5,35,68,.10)}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+:where(a,button,input):focus-visible{outline:3px solid #ffbe35;outline-offset:3px}
+.site-header{box-shadow:0 2px 18px rgba(5,35,68,.07)}
+.header-main{min-height:104px}
+.brand{flex-shrink:0}
+.brand img{width:71px;height:78px}
+.brand-text strong{color:#09518e;letter-spacing:-.045em}
+.brand-text small{color:#34465a}
+.header-right{min-width:0}
+.toplinks a:hover,.footer-cols a:hover,.copyright a:hover{text-decoration:underline;text-underline-offset:3px}
+.nav-wrap{background:#fff}
+.main-nav a{transition:background .18s ease,color .18s ease}
+.main-nav .sub-menu{border-top:3px solid var(--gold);min-width:235px}
+.hero{min-height:330px;position:relative;background-position:center}
+.hero-inner{padding-top:56px;padding-bottom:56px;position:relative;z-index:1}
+.hero h1{max-width:780px;font-weight:900;letter-spacing:-.045em}
+.hero-cta,.btn{transition:transform .18s ease,box-shadow .18s ease}
+.hero-cta:hover,.btn:hover{transform:translateY(-2px);box-shadow:0 7px 20px #071d3838}
+.section{padding:27px 0}
+.section-head h2{font-weight:850;letter-spacing:-.025em}
+.quick-grid{gap:13px;margin-top:20px;margin-bottom:24px}
+.quick-card{min-height:122px;border-radius:14px;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s}
+.quick-card:hover{transform:translateY(-4px);box-shadow:0 16px 30px #09294a32}
+.quick-card .icon{font-size:2rem}
+.quick-card strong{font-size:.79rem}
+.panel{background:#eef3f8;border-radius:16px;padding:22px}
+.event-card,.news-card{border-radius:12px;box-shadow:var(--shadow);transition:transform .18s}
+.event-card:hover,.news-card:hover{transform:translateY(-3px)}
+.event-card img,.news-card img{height:152px}
+.event-card .body,.news-card .body{padding:16px}
+.page-hero{background:linear-gradient(110deg,#063c6c 0%,#0b5c95 100%);padding:46px 0}
+.page-hero h1{font-weight:850;letter-spacing:-.035em;line-height:1.12}
+.page-content{min-height:300px;padding:36px 0 76px}
+.page-content article{max-width:1020px;margin:auto;font-size:1rem;line-height:1.75}
+.page-content article h2,.page-content article h3{line-height:1.25;color:var(--navy);margin:1.55em 0 .55em}
+.page-content article p{margin:0 0 1.15em}
+.page-content article img{border-radius:10px}
+.page-content article ul,.page-content article ol{padding-left:1.5em}
+.page-content article table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
+.page-content article th,.page-content article td{border:1px solid #cfdae4;padding:12px;text-align:left}
+.page-content article th{background:#ebf2f8}
+.breadcrumbs{color:#dbeaf7;font-size:.83rem;margin:0 0 12px}
+.breadcrumbs a{color:#fff;text-decoration:underline;text-underline-offset:2px}
+.breadcrumbs span{padding:0 8px}
+.site-footer{background:#042744}
+.footer-cols{padding-top:42px;padding-bottom:39px}
+.footer-cols h3{font-size:.86rem}
+.footer-cols p,.footer-cols a{font-size:.77rem}
+@media(max-width:1050px){.header-main{justify-content:center}.brand{margin-right:auto}.header-right{justify-content:center}}
+@media(max-width:760px){.brand{margin:0 auto}.header-right{margin:0 auto}.access{display:flex;flex-wrap:wrap;justify-content:center}.main-nav .sub-menu{border-top:0;background:#f2f6fa}.main-nav .sub-menu a{padding-left:26px}.hero-inner{padding:38px 0}.hero h1{font-size:2.4rem}.panel{padding:16px}.page-hero{padding:30px 0}.page-hero h1{font-size:1.8rem}.quick-card{min-height:112px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
