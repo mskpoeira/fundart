@@ -1,0 +1,34 @@
+name: Conferir acesso homologacao FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/wordpress-staging-check.yml"]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: "120s"
+          command_timeout: "3m"
+          script: |
+            set -eu
+            echo "=== DNS ==="
+            for domain in fundart.mskpoeira.com.br wp-fundart.mskpoeira.com.br; do
+              addr="$(getent ahostsv4 "$domain" | awk 'NR==1{print $1}' || true)"
+              echo "DOMAIN=$domain IP=${addr:-NOT_RESOLVED}"
+            done
+            echo "=== STAGING ==="
+            docker inspect fundart-wp-staging-app --format 'STAGING_APP_RUNNING={{.State.Running}} HEALTH={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}'
+            docker inspect fundart-wp-staging-db --format 'STAGING_DB_RUNNING={{.State.Running}}'
+            curl -s -o /dev/null -w "WORDPRESS_HTTP=%{http_code}\n" --max-time 10 http://127.0.0.1:63252/wp-login.php
+            echo "=== FILES ==="
+            docker exec fundart-wp-staging-app sh -c 'test -f /var/www/html/wp-config.php && echo WP_CONFIG=EXISTS; test -f /var/www/html/wp-content/themes/fundart/style.css && echo THEME_MOUNT=EXISTS'
+            echo "=== CADDY ==="
+            if test -f /etc/caddy/sites/fundart.caddy; then echo FUNDART_CADDY=EXISTS; fi
