@@ -13,7 +13,11 @@ fundart.mskpoeira.com.br {
     # Entradas administrativas amigáveis enquanto o WordPress é homologado.
     redir /wp-admin /homologacao/wp-admin/ 302
     redir /wp-admin/ /homologacao/wp-admin/ 302
+    @adminSubpath path_regexp adminSubpath ^/wp-admin/(.*)$
+    redir @adminSubpath /homologacao/wp-admin/{re.adminSubpath.1} 302
     redir /wp-login.php /homologacao/wp-login.php 302
+    @wpAssets path_regexp wpAssets ^/(wp-content|wp-includes)/(.*)$
+    redir @wpAssets /homologacao/{re.wpAssets.1}/{re.wpAssets.2} 302
 
     # Homologação WordPress isolada, sem substituir o portal estático.
     redir /homologacao /homologacao/ 308
