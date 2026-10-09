@@ -18,6 +18,12 @@ jobs:
           command_timeout: "3m"
           script: |
             set -eu
+                        echo "=== SECURE ENV FILES ==="
+            for p in /opt/fundart-secrets/wordpress.env /opt/fundart/.env.wp /opt/fundart/.env; do
+              if test -f "$p"; then echo "ENV_FOUND=$p"; else echo "ENV_ABSENT=$p"; fi
+            done
+            echo "=== DB BACKUP FILES ==="
+            find /opt/fundart-secrets /opt/fundart -maxdepth 2 -type f -name '*.sql*' -printf 'BACKUP=%p\n' 2>/dev/null | head -15 || true
             echo "Checking DB admin access through local socket" 
             if docker exec -u root fundart-wp-db mariadb --protocol=socket -uroot -N -e "SELECT 1" >/dev/null 2>&1; then echo DB_SOCKET_ROOT=OK; else echo DB_SOCKET_ROOT=DENIED; fi
             echo "Checking DB admin access"
