@@ -1,0 +1,60 @@
+name: fundart-wordpress-staging
+services:
+  database:
+    image: mariadb:11.4
+    container_name: fundart-wp-staging-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: fundart_wp
+      MARIADB_USER: fundart_wp
+      MARIADB_PASSWORD: ${FUNDART_STAGING_DB_PASSWORD:?configure no servidor}
+      MARIADB_ROOT_PASSWORD: ${FUNDART_STAGING_ROOT_PASSWORD:?configure no servidor}
+    volumes:
+      - fundart_staging_db:/var/lib/mysql
+    networks: [fundart_staging_internal]
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+    security_opt: [no-new-privileges:true]
+  wordpress:
+    image: wordpress:6.8.3-php8.3-apache
+    container_name: fundart-wp-staging-app
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:63252:80"
+    environment:
+      WORDPRESS_DB_HOST: database:3306
+      WORDPRESS_DB_USER: fundart_wp
+      WORDPRESS_DB_PASSWORD: ${FUNDART_STAGING_DB_PASSWORD:?configure no servidor}
+      WORDPRESS_DB_NAME: fundart_wp
+      WORDPRESS_TABLE_PREFIX: fdt_
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', 'https://wp-fundart.mskpoeira.com.br');
+        define('WP_SITEURL', 'https://wp-fundart.mskpoeira.com.br');
+        if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+          $$_SERVER['HTTPS'] = 'on';
+        }
+        define('FORCE_SSL_ADMIN', true);
+        define('DISALLOW_FILE_EDIT', true);
+    volumes:
+      - fundart_staging_wp:/var/www/html
+      - ./wordpress/themes/fundart:/var/www/html/wp-content/themes/fundart:ro
+    networks: [fundart_staging_internal]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/wp-login.php') === false ? 1 : 0);"]
+      interval: 20s
+      timeout: 8s
+      start_period: 60s
+      retries: 12
+    security_opt: [no-new-privileges:true]
+volumes:
+  fundart_staging_db:
+  fundart_staging_wp:
+networks:
+  fundart_staging_internal:
+    driver: bridge
