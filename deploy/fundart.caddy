@@ -10,5 +10,15 @@ fundart.mskpoeira.com.br {
         -Server
     }
 
-    reverse_proxy 127.0.0.1:63250
+    # Homologação WordPress isolada, sem substituir o portal estático.
+    redir /homologacao /homologacao/ 308
+    handle_path /homologacao/* {
+        reverse_proxy 127.0.0.1:63252 {
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-Prefix /homologacao
+        }
+    }
+    handle {
+        reverse_proxy 127.0.0.1:63250
+    }
 }
