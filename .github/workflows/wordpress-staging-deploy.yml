@@ -1,0 +1,55 @@
+name: Implantar WordPress FUNDART homologacao isolada
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/wordpress-staging-deploy.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fundart-wordpress-staging
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: "120s"
+          command_timeout: "15m"
+          script: |
+            set -Eeuo pipefail
+            umask 077
+            cd /opt/fundart
+            git fetch -q origin main
+            git show origin/main:docker-compose.wordpress.staging.yml > docker-compose.wordpress.staging.yml
+            test -f wordpress/themes/fundart/style.css
+            test -f wordpress/themes/fundart/functions.php
+            install -d -m 700 /opt/fundart-secrets
+            ENV_FILE=/opt/fundart-secrets/wordpress-staging.env
+            if [ ! -f "$ENV_FILE" ]; then
+              {
+                printf "FUNDART_STAGING_DB_PASSWORD=%s\n" "$(openssl rand -hex 32)"
+                printf "FUNDART_STAGING_ROOT_PASSWORD=%s\n" "$(openssl rand -hex 32)"
+              } > "$ENV_FILE"
+              chmod 600 "$ENV_FILE"
+            fi
+            docker compose --env-file "$ENV_FILE" -f docker-compose.wordpress.staging.yml config -q
+            docker compose --env-file "$ENV_FILE" -f docker-compose.wordpress.staging.yml up -d --pull missing --no-build
+            OK=0
+            for i in $(seq 1 50); do
+              code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://127.0.0.1:63252/wp-login.php || true)"
+              if [ "$code" = 200 ] || [ "$code" = 302 ]; then OK=1; break; fi
+              sleep 3
+            done
+            echo "STAGING_HTTP_OK=$OK"
+            docker inspect fundart-wp-staging-db --format 'STAGING_DB={{.State.Running}}'
+            docker inspect fundart-wp-staging-app --format 'STAGING_WP={{.State.Running}}'
+            docker inspect fundart-wp-db --format 'ORIGINAL_DB={{.State.Running}}'
+            docker inspect fundart-web-prod --format 'PUBLIC_SITE={{.State.Running}}'
+            test "$OK" -eq 1
+            echo "ISOLATED_WORDPRESS_READY=YES"
