@@ -1,0 +1,48 @@
+name: Backup seguro MariaDB FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/wordpress-db-backup.yml"]
+permissions:
+  contents: read
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "8m"
+          script: |
+            set -Eeuo pipefail
+            umask 077
+            docker inspect fundart-wp-db >/dev/null
+            docker inspect fundart-web-prod >/dev/null
+            [ "$(docker inspect -f '{{.State.Running}}' fundart-web-prod)" = true ]
+            [ "$(docker inspect -f '{{.State.Running}}' fundart-wp-db)" = true ]
+            [ "$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/var/lib/mysql"}}{{.Name}}{{end}}{{end}}' fundart-wp-db)" = "fundart-wordpress_fundart_db" ]
+            BACKUP_DIR=/opt/fundart-secrets/backups
+            install -d -m 700 "$BACKUP_DIR"
+            FILE="$BACKUP_DIR/mariadb-pre-recovery-$(date +%Y%m%d-%H%M%S).tar.gz"
+            restore_db() {
+              docker start fundart-wp-db >/dev/null 2>&1 || true
+            }
+            trap restore_db EXIT
+            echo "DB_COLD_BACKUP_STARTED"
+            docker stop -t 45 fundart-wp-db >/dev/null
+            docker run --rm --network none --mount type=volume,src=fundart-wordpress_fundart_db,dst=/source,readonly --mount type=bind,src="$BACKUP_DIR",dst=/out mariadb:11.4 sh -ec 'cd /source; tar -czf "/out/$(basename "$BACKUP_DEST")" .' 2>/dev/null || true
+            # Save directly using a known filename, and fail safely if the archive cannot be created.
+            if [ ! -s "$FILE" ]; then
+              docker run --rm --network none --mount type=volume,src=fundart-wordpress_fundart_db,dst=/source,readonly --mount type=bind,src="$BACKUP_DIR",dst=/out mariadb:11.4 sh -ec "cd /source; tar -czf /out/$(basename "$FILE") ."
+            fi
+            test -s "$FILE"
+            tar -tzf "$FILE" >/dev/null
+            chmod 600 "$FILE"
+            restore_db
+            trap - EXIT
+            echo "BACKUP_ARCHIVE_VERIFIED=YES"
+            echo "DB_RESTARTED=$(docker inspect -f '{{.State.Running}}' fundart-wp-db)"
+            echo "STATIC_SITE_RUNNING=$(docker inspect -f '{{.State.Running}}' fundart-web-prod)"
