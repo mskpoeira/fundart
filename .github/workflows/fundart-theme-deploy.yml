@@ -1,0 +1,46 @@
+name: Publicar tema WordPress FUNDART
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fundart-theme-deploy.yml"
+      - "wordpress/themes/fundart/**"
+permissions:
+  contents: read
+concurrency:
+  group: fundart-wordpress-theme
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: "120s"
+          command_timeout: "6m"
+          script: |
+            set -Eeuo pipefail
+            cd /opt/fundart
+            test "$(docker inspect -f '{{.State.Running}}' fundart-wp-staging-app)" = true
+            test "$(docker inspect -f '{{.State.Running}}' fundart-web-prod)" = true
+            install -d -m 700 /opt/fundart-secrets/backups
+            stamp="$(date +%Y%m%d-%H%M%S)"
+            tar -czf "/opt/fundart-secrets/backups/theme-before-style-$stamp.tar.gz" -C wordpress/themes fundart
+            echo "THEME_BACKUP=YES"
+            git fetch -q origin main
+            git checkout origin/main -- wordpress/themes/fundart
+            find wordpress/themes/fundart -type d -exec chmod 755 {} +
+            find wordpress/themes/fundart -type f -exec chmod 644 {} +
+            docker exec fundart-wp-staging-app php -l /var/www/html/wp-content/themes/fundart/functions.php
+            docker exec fundart-wp-staging-app php -l /var/www/html/wp-content/themes/fundart/page.php
+            ROOT="$(curl -s -L --max-time 12 -o /dev/null -w '%{http_code}' https://fundart.mskpoeira.com.br/)"
+            PAGE="$(curl -s -L --max-time 12 -o /dev/null -w '%{http_code}' https://fundart.mskpoeira.com.br/a-fundart/)"
+            CSS="$(curl -s -L --max-time 12 -o /dev/null -w '%{http_code}' https://fundart.mskpoeira.com.br/wp-content/themes/fundart/style.css)"
+            LOGIN="$(curl -s -L --max-time 12 -o /dev/null -w '%{http_code}' https://fundart.mskpoeira.com.br/wp-login.php)"
+            echo "ROOT_HTTP=$ROOT PAGE_HTTP=$PAGE CSS_HTTP=$CSS LOGIN_HTTP=$LOGIN"
+            test "$ROOT" = 200 && test "$PAGE" = 200 && test "$CSS" = 200 && test "$LOGIN" = 200
+            echo "THEME_DEPLOY=OK"
