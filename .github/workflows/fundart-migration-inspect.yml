@@ -25,8 +25,7 @@ jobs:
                     r=urllib.request.urlopen(urllib.request.Request('https://fundart.com.br'+path,headers={'User-Agent':'Mozilla/5.0'}),timeout=18)
                     s=r.read().decode('utf-8','replace')
                     title=re.search(r'<title[^>]*>(.*?)</title>',s,re.I|re.S)
-                    desc=re.search(r'<meta[^>]*name=["\\']description["\\'][^>]*content=["\\'](.*?)["\\']',s,re.I|re.S)
-                    print('PATH',path,'HTTP',r.status,'SIZE',len(s),'TITLE',html.unescape(title.group(1))[:90] if title else 'none','DESCRIPTION',html.unescape(desc.group(1))[:120] if desc else 'none')
+                    print('PATH',path,'HTTP',r.status,'SIZE',len(s),'TITLE',html.unescape(title.group(1))[:90] if title else 'none')
                     for token in ('elementor','entry-content','wpb_wrapper','the7','vc_row','wp-block','fundart'):
                         print('TOKEN',token,'COUNT',s.lower().count(token))
                     m=re.search(r'<main[^>]*>',s,re.I)
