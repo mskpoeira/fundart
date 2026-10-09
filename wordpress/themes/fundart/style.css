@@ -3,7 +3,7 @@ Theme Name: FUNDART Portal Cultural
 Theme URI: https://fundart.mskpoeira.com.br/
 Author: Projeto Fundart
 Description: Tema institucional da Fundação de Arte e Cultura de Ubatuba, preservando o layout aprovado e com administração WordPress.
-Version: 1.2.0
+Version: 1.3.0
 Requires at least: 6.4
 Requires PHP: 8.1
 Text Domain: fundart
@@ -90,3 +90,23 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 .institutional-layout .institutional-article{border-radius:14px;background:#fff}
 @media(max-width:820px){.institutional-layout{grid-template-columns:1fr;gap:20px}.institutional-nav{position:static}.institutional-nav ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.institutional-nav li+li{border-top:0}}
 @media(max-width:440px){.institutional-nav ul{grid-template-columns:1fr}}
+
+/* Formulários de inscrição — mesma linguagem visual do portal */
+.fundart-enrollment{max-width:900px;margin:22px 0 36px}
+.fundart-form{background:#fff;border:1px solid #dce6ee;border-radius:16px;padding:28px;box-shadow:0 8px 24px rgba(5,41,72,.07)}
+.fundart-form-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 20px;margin-bottom:24px}
+.fundart-form-fields label{display:flex;flex-direction:column;gap:7px;font-weight:750;color:#153752;font-size:.91rem}
+.fundart-form-fields input,.fundart-form-fields select{width:100%;min-width:0;min-height:45px;padding:11px 13px;border:1px solid #b9cad8;background:#fbfdff;border-radius:9px;color:#173653;font:inherit}
+.fundart-form-fields input:focus,.fundart-form-fields select:focus{border-color:#075b9e;outline:3px solid #075b9e26}
+.fundart-form-note{grid-column:1/-1;background:#eef4fa;border-left:4px solid #0a62a2;border-radius:7px;padding:14px;color:#23435c}
+.fundart-form-consent{display:flex;align-items:flex-start;gap:10px;margin:12px 0 22px;font-size:.86rem}
+.fundart-form-consent input{margin-top:6px;flex-shrink:0}
+.fundart-form .btn{border:0;cursor:pointer;font:inherit;font-weight:800}
+.fundart-form-message,.fundart-form-error{padding:16px;border-radius:9px;margin:16px 0;font-weight:700}
+.fundart-form-message{background:#e5f5e9;color:#145b29}
+.fundart-form-error{background:#fff0ee;color:#8e231e}
+.fundart-hp{position:absolute;left:-9999px;overflow:hidden;width:1px;height:1px}
+.enrollment-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:22px 0}
+.enrollment-links>a{border-radius:14px;border:1px solid #d9e5ee;background:#f0f6fb;padding:20px;font-size:1.05rem;font-weight:800;color:#074774!important;text-decoration:none!important}
+.enrollment-links>a:hover{background:#e3eff9}
+@media(max-width:650px){.fundart-form{padding:17px}.fundart-form-fields,.enrollment-links{grid-template-columns:1fr}}
