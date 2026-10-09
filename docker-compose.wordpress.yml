@@ -40,8 +40,8 @@ services:
         define('WP_HOME', 'https://fundart.mskpoeira.com.br');
         define('WP_SITEURL', 'https://fundart.mskpoeira.com.br');
         define('FORCE_SSL_ADMIN', true);
-        if (isset(\$_SERVER['HTTP_X_FORWARDED_PROTO']) && \$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-          \$_SERVER['HTTPS'] = 'on';
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+          $_SERVER['HTTPS'] = 'on';
         }
         define('DISALLOW_FILE_EDIT', true);
         define('WP_AUTO_UPDATE_CORE', 'minor');
@@ -51,7 +51,7 @@ services:
     networks:
       - fundart_wp_internal
     healthcheck:
-      test: ["CMD-SHELL", "php -r 'exit(@file_get_contents("http://127.0.0.1/wp-login.php") === false ? 1 : 0);'"]
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/wp-login.php') === false ? 1 : 0);"]
       interval: 20s
       timeout: 8s
       start_period: 70s
