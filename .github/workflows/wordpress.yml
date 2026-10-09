@@ -1,11 +1,5 @@
 name: Preparar WordPress Fundart
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'wordpress/**'
-      - 'docker-compose.wordpress.yml'
-      - '.github/workflows/wordpress.yml'
   workflow_dispatch:
 
 permissions:
