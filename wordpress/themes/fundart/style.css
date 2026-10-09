@@ -3,7 +3,7 @@ Theme Name: FUNDART Portal Cultural
 Theme URI: https://fundart.mskpoeira.com.br/
 Author: Projeto Fundart
 Description: Tema institucional da Fundação de Arte e Cultura de Ubatuba, preservando o layout aprovado e com administração WordPress.
-Version: 1.1.0
+Version: 1.2.0
 Requires at least: 6.4
 Requires PHP: 8.1
 Text Domain: fundart
@@ -75,3 +75,18 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 @media(max-width:1050px){.header-main{justify-content:center}.brand{margin-right:auto}.header-right{justify-content:center}}
 @media(max-width:760px){.brand{margin:0 auto}.header-right{margin:0 auto}.access{display:flex;flex-wrap:wrap;justify-content:center}.main-nav .sub-menu{border-top:0;background:#f2f6fa}.main-nav .sub-menu a{padding-left:26px}.hero-inner{padding:38px 0}.hero h1{font-size:2.4rem}.panel{padding:16px}.page-hero{padding:30px 0}.page-hero h1{font-size:1.8rem}.quick-card{min-height:112px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+
+/* Navegação institucional padronizada; todas as paginas usam header e footer oficiais */
+.institutional-layout{display:grid;grid-template-columns:minmax(200px,250px) minmax(0,1fr);align-items:start;gap:30px}
+.institutional-layout .institutional-article{min-width:0;width:100%}
+.institutional-nav{background:#f0f5fa;border:1px solid #dce7f0;border-radius:13px;padding:18px 13px;position:sticky;top:20px}
+.institutional-nav h2{color:#073d6a;font-size:1.04rem;margin:0 10px 10px;font-weight:850}
+.institutional-nav ul{padding:0;margin:0;list-style:none}
+.institutional-nav li+li{border-top:1px solid #dbe6f0}
+.institutional-nav a{display:block;padding:11px 12px;color:#123b59;border-radius:8px;font-weight:700;font-size:.86rem;line-height:1.35}
+.institutional-nav a:hover,.institutional-nav a[aria-current="page"]{background:#075b9e;color:white}
+.page-content.institutional-layout a:not(.btn){text-decoration:none}
+.institutional-layout .institutional-article a:not(.btn){text-decoration:underline;text-underline-offset:3px}
+.institutional-layout .institutional-article{border-radius:14px;background:#fff}
+@media(max-width:820px){.institutional-layout{grid-template-columns:1fr;gap:20px}.institutional-nav{position:static}.institutional-nav ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.institutional-nav li+li{border-top:0}}
+@media(max-width:440px){.institutional-nav ul{grid-template-columns:1fr}}
