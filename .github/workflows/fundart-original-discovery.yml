@@ -1,0 +1,30 @@
+name: Mapear conteudo publico FUNDART original
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-original-discovery.yml"]
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "4m"
+          script: |
+            set -eu
+            echo "=== ORIGINAL ENDPOINTS ==="
+            for path in / /wp-json/ /wp-json/wp/v2/types /wp-json/wp/v2/pages?per_page=1 /wp-json/wp/v2/posts?per_page=1 /wp-sitemap.xml /sitemap_index.xml; do
+              curl -s -L --max-time 18 -o /dev/null -w "PATH=$path HTTP=%{http_code}\n" "https://fundart.com.br$path" || true
+            done
+            echo "=== TYPES ==="
+            curl -fsSL --max-time 20 https://fundart.com.br/wp-json/wp/v2/types | python3 -c 'import json,sys; print("TYPES="+",".join(json.load(sys.stdin).keys()))' || true
+            echo "=== PUBLIC COUNTS ==="
+            for kind in posts pages; do
+              curl -fsSI --max-time 20 "https://fundart.com.br/wp-json/wp/v2/$kind?per_page=1" | grep -i '^x-wp-total:' | tr -d '\r' | sed "s/^/TYPE=$kind /" || true
+            done
