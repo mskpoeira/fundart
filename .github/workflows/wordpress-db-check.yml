@@ -14,7 +14,7 @@ jobs:
           host: 77.37.40.81
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: "75s"
+          timeout: "120s"
           command_timeout: "3m"
           script: |
             set -eu
