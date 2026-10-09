@@ -10,24 +10,11 @@ fundart.mskpoeira.com.br {
         -Server
     }
 
-    # Entradas administrativas amigáveis enquanto o WordPress é homologado.
-    redir /wp-admin /homologacao/wp-admin/ 302
-    redir /wp-admin/ /homologacao/wp-admin/ 302
-    @adminSubpath path_regexp adminSubpath ^/wp-admin/(.*)$
-    redir @adminSubpath /homologacao/wp-admin/{re.adminSubpath.1} 302
-    redir /wp-login.php /homologacao/wp-login.php 302
-    @wpAssets path_regexp wpAssets ^/(wp-content|wp-includes)/(.*)$
-    redir @wpAssets /homologacao/{re.wpAssets.1}/{re.wpAssets.2} 302
+    # WordPress da FUNDART no dominio exclusivo de testes.
+    @oldHomologacao path /homologacao /homologacao/*
+    redir @oldHomologacao / 302
 
-    # Homologação WordPress isolada, sem substituir o portal estático.
-    redir /homologacao /homologacao/ 308
-    handle_path /homologacao/* {
-        reverse_proxy 127.0.0.1:63252 {
-            header_up X-Forwarded-Proto https
-            header_up X-Forwarded-Prefix /homologacao
-        }
-    }
-    handle {
-        reverse_proxy 127.0.0.1:63250
+    reverse_proxy 127.0.0.1:63252 {
+        header_up X-Forwarded-Proto https
     }
 }
