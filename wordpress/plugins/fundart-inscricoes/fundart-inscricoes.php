@@ -65,7 +65,7 @@ function fundart_inscricao_form(string $tipo): string {
  <?php endif; ?>
  </div>
  <label class="fundart-form-consent"><input type="checkbox" name="ciente" value="1" required> Declaro ciência de que este formulário é exclusivamente de homologação e não constitui inscrição oficial.</label>
- <button type="submit" class="btn">Enviar teste</button>
+ <?php if ($aluno): ?><button type="button" class="btn" disabled aria-disabled="true">Inscrições online aguardando autorização</button><?php else: ?><button type="submit" class="btn">Enviar teste</button><?php endif; ?>
  </form>
  </section>
  <?php return (string)ob_get_clean();
