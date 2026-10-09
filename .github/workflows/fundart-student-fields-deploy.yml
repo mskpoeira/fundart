@@ -1,0 +1,34 @@
+name: Publicar cadastro completo FUNDART - homologacao
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-student-fields-deploy.yml"]
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "7m"
+          script: |
+            set -Eeuo pipefail
+            cd /opt/fundart
+            test "$(docker inspect -f '{{.State.Running}}' fundart-wp-staging-app)" = true
+            git fetch -q origin main
+            install -d -m 755 wordpress/plugins/fundart-inscricoes
+            git show origin/main:wordpress/plugins/fundart-inscricoes/fundart-inscricoes.php > wordpress/plugins/fundart-inscricoes/fundart-inscricoes.php
+            chmod 644 wordpress/plugins/fundart-inscricoes/fundart-inscricoes.php
+            docker cp wordpress/plugins/fundart-inscricoes/fundart-inscricoes.php fundart-wp-staging-app:/var/www/html/wp-content/plugins/fundart-inscricoes/fundart-inscricoes.php
+            docker exec fundart-wp-staging-app php -l /var/www/html/wp-content/plugins/fundart-inscricoes/fundart-inscricoes.php
+            curl -fsSL --max-time 15 https://fundart.mskpoeira.com.br/inscricoes-oficinas/ -o /tmp/fundart-full-registration.html
+            grep -q 'Dança (Jazz)' /tmp/fundart-full-registration.html
+            grep -q 'responsavel_telefone' /tmp/fundart-full-registration.html
+            grep -q 'name="cpf"' /tmp/fundart-full-registration.html
+            grep -q 'data-minor-fields' /tmp/fundart-full-registration.html
+            echo "FULL_REGISTRATION_FIELDS_VISIBLE=YES"
