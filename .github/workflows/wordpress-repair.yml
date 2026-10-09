@@ -1,0 +1,62 @@
+name: Recuperar WordPress FUNDART (isolado)
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/wordpress-repair.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fundart-wordpress-repair
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reparar apenas container WordPress e validar
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          command_timeout: "12m"
+          script: |
+            set -Eeuo pipefail
+            cd /opt/fundart
+            command -v docker >/dev/null
+            command -v git >/dev/null
+            command -v python3 >/dev/null
+            docker inspect fundart-wp-app >/dev/null
+            docker inspect fundart-wp-db >/dev/null
+            docker inspect fundart-web-prod >/dev/null
+            test "$(docker inspect -f '{{.State.Running}}' fundart-wp-db)" = true
+            test "$(docker inspect -f '{{.State.Running}}' fundart-web-prod)" = true
+            # Preserve the locally managed project and database. Never run git reset/clean or compose down.
+            git fetch -q origin main
+            TFILE="$(mktemp /opt/fundart/.wp-compose-XXXXXX.yml)"
+            trap 'rm -f "$TFILE"' EXIT
+            git show origin/main:docker-compose.wordpress.yml > "$TFILE"
+            # Source credentials exclusively from the already running, authorized containers.
+            export FUNDART_DB_PASSWORD="$(docker exec fundart-wp-app printenv WORDPRESS_DB_PASSWORD)"
+            export FUNDART_DB_ROOT_PASSWORD="$(docker exec fundart-wp-db printenv MARIADB_ROOT_PASSWORD)"
+            test -n "$FUNDART_DB_PASSWORD"
+            test -n "$FUNDART_DB_ROOT_PASSWORD"
+            docker compose --project-directory /opt/fundart -f "$TFILE" config -q
+            # Lint the exact Compose-resolved snippet without printing configuration or secrets.
+            docker compose --project-directory /opt/fundart -f "$TFILE" config --format json | python3 -c 'import json,sys,subprocess; s=json.load(sys.stdin)["services"]["wordpress"]["environment"]["WORDPRESS_CONFIG_EXTRA"]; p=subprocess.run(["docker","exec","-i","fundart-wp-app","php","-l"],input="<?php\n"+s,text=True,capture_output=True); print("PHP_SYNTAX=OK" if p.returncode==0 else "PHP_SYNTAX=ERROR"); sys.exit(p.returncode)'
+            # Update only the existing WordPress application; never touch the MariaDB service.
+            docker compose --project-directory /opt/fundart -f "$TFILE" up -d --no-deps --force-recreate wordpress
+            WP_OK=0
+            for i in $(seq 1 35); do
+              CODE="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:63251/wp-login.php || true)"
+              if [ "$CODE" = 200 ] || [ "$CODE" = 302 ]; then WP_OK=1; break; fi
+              sleep 4
+            done
+            echo "WORDPRESS_HTTP_VALID=$WP_OK"
+            docker inspect fundart-wp-app --format 'WORDPRESS_HEALTH={{.State.Health.Status}}'
+            docker inspect fundart-wp-db --format 'MARIADB_RUNNING={{.State.Running}}'
+            docker inspect fundart-web-prod --format 'STATIC_SITE_RUNNING={{.State.Running}}'
+            test "$WP_OK" -eq 1
+            echo "WORDPRESS_RECOVERY=OK"
