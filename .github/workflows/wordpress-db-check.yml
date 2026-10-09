@@ -18,6 +18,8 @@ jobs:
           command_timeout: "3m"
           script: |
             set -eu
+            echo "Checking DB admin access through local socket" 
+            if docker exec -u root fundart-wp-db mariadb --protocol=socket -uroot -N -e "SELECT 1" >/dev/null 2>&1; then echo DB_SOCKET_ROOT=OK; else echo DB_SOCKET_ROOT=DENIED; fi
             echo "Checking DB admin access"
             docker exec fundart-wp-db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" mariadb -uroot -N -e "SELECT 1" >/dev/null' && echo DB_ROOT_AUTH=OK
             echo "Checking database"
