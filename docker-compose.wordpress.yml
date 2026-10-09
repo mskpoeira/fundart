@@ -1,0 +1,68 @@
+name: fundart-wordpress
+services:
+  database:
+    image: mariadb:11.4
+    container_name: fundart-wp-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: fundart_wp
+      MARIADB_USER: fundart_wp
+      MARIADB_PASSWORD: ${FUNDART_DB_PASSWORD:?configure no servidor}
+      MARIADB_ROOT_PASSWORD: ${FUNDART_DB_ROOT_PASSWORD:?configure no servidor}
+    volumes:
+      - fundart_db:/var/lib/mysql
+    networks:
+      - fundart_wp_internal
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+    security_opt:
+      - no-new-privileges:true
+
+  wordpress:
+    image: wordpress:6.8.3-php8.3-apache
+    container_name: fundart-wp-app
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:63251:80"
+    environment:
+      WORDPRESS_DB_HOST: database:3306
+      WORDPRESS_DB_USER: fundart_wp
+      WORDPRESS_DB_PASSWORD: ${FUNDART_DB_PASSWORD:?configure no servidor}
+      WORDPRESS_DB_NAME: fundart_wp
+      WORDPRESS_TABLE_PREFIX: fdt_
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', 'https://fundart.mskpoeira.com.br');
+        define('WP_SITEURL', 'https://fundart.mskpoeira.com.br');
+        define('FORCE_SSL_ADMIN', true);
+        if (isset(\$_SERVER['HTTP_X_FORWARDED_PROTO']) && \$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+          \$_SERVER['HTTPS'] = 'on';
+        }
+        define('DISALLOW_FILE_EDIT', true);
+        define('WP_AUTO_UPDATE_CORE', 'minor');
+    volumes:
+      - fundart_wp:/var/www/html
+      - ./wordpress/themes/fundart:/var/www/html/wp-content/themes/fundart:ro
+    networks:
+      - fundart_wp_internal
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@file_get_contents("http://127.0.0.1/wp-login.php") === false ? 1 : 0);'"]
+      interval: 20s
+      timeout: 8s
+      start_period: 70s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  fundart_db:
+  fundart_wp:
+
+networks:
+  fundart_wp_internal:
+    driver: bridge

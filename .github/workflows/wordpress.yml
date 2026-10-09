@@ -1,0 +1,73 @@
+name: Preparar WordPress Fundart
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'wordpress/**'
+      - 'docker-compose.wordpress.yml'
+      - '.github/workflows/wordpress.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fundart-wordpress
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar tema e Docker Compose
+        run: |
+          set -euo pipefail
+          test -f wordpress/themes/fundart/style.css
+          test -f wordpress/themes/fundart/functions.php
+          test -f wordpress/themes/fundart/front-page.php
+          FUNDART_DB_PASSWORD=validation FUNDART_DB_ROOT_PASSWORD=validation docker compose -f docker-compose.wordpress.yml config --quiet
+      - name: Verificar sintaxe PHP dos templates
+        run: |
+          set -euo pipefail
+          for p in wordpress/themes/fundart/*.php; do php -l "$p"; done
+
+  deploy-staging:
+    needs: validate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Provisionar WordPress isolado sem alterar domínio público
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          command_timeout: '20m'
+          script: |
+            set -Eeuo pipefail
+            umask 077
+            APP_DIR=/opt/fundart
+            test -d "$APP_DIR/.git"
+            cd "$APP_DIR"
+            git fetch origin main
+            git reset --hard origin/main
+            ENV_FILE=.env.wp
+            if [ ! -f "$ENV_FILE" ]; then
+              {
+                printf 'FUNDART_DB_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+                printf 'FUNDART_DB_ROOT_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+              } > "$ENV_FILE"
+              chmod 600 "$ENV_FILE"
+            fi
+            docker compose --env-file "$ENV_FILE" -f docker-compose.wordpress.yml up -d --pull missing
+            for i in $(seq 1 60); do
+              if curl -fsS http://127.0.0.1:63251/wp-login.php >/dev/null; then
+                echo WORDPRESS_STAGING_READY=YES
+                echo SITE_STATIC_UNCHANGED=YES
+                exit 0
+              fi
+              sleep 5
+            done
+            docker compose --env-file "$ENV_FILE" -f docker-compose.wordpress.yml ps
+            exit 1
