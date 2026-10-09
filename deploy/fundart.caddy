@@ -10,6 +10,11 @@ fundart.mskpoeira.com.br {
         -Server
     }
 
+    # Entradas administrativas amigáveis enquanto o WordPress é homologado.
+    redir /wp-admin /homologacao/wp-admin/ 302
+    redir /wp-admin/ /homologacao/wp-admin/ 302
+    redir /wp-login.php /homologacao/wp-login.php 302
+
     # Homologação WordPress isolada, sem substituir o portal estático.
     redir /homologacao /homologacao/ 308
     handle_path /homologacao/* {
