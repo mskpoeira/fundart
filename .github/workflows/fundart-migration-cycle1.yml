@@ -1,0 +1,58 @@
+name: Migracao institucional FUNDART - ciclo 1
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fundart-migration-cycle1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fundart-content-migration
+  cancel-in-progress: false
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "10m"
+          script: |
+            set -Eeuo pipefail
+            umask 077
+            cd /opt/fundart
+            test "$(docker inspect -f '{{.State.Running}}' fundart-wp-staging-db)" = true
+            test "$(docker inspect -f '{{.State.Running}}' fundart-wp-staging-app)" = true
+            install -d -m 700 /opt/fundart-secrets/backups
+            set -a
+            . /opt/fundart-secrets/wordpress-staging.env
+            set +a
+            DUMP="/opt/fundart-secrets/backups/fundart-before-content-cycle1-$(date +%Y%m%d-%H%M%S).sql"
+            docker exec -e MYSQL_PWD="$FUNDART_STAGING_ROOT_PASSWORD" fundart-wp-staging-db mariadb-dump -uroot --single-transaction --quick fundart_wp > "$DUMP"
+            test -s "$DUMP"
+            chmod 600 "$DUMP"
+            echo "DATABASE_BACKUP=OK"
+            git fetch -q origin main
+            git show origin/main:wordpress/migrate-institutional.php > wordpress/migrate-institutional.php
+            chmod 644 wordpress/migrate-institutional.php
+            docker run --rm --network fundart-wordpress-staging_fundart_staging_internal --user 33:33 \
+              --mount type=volume,src=fundart-wordpress-staging_fundart_staging_wp,dst=/var/www/html \
+              --mount type=bind,src=/opt/fundart/wordpress/themes/fundart,dst=/var/www/html/wp-content/themes/fundart,readonly \
+              --mount type=bind,src=/opt/fundart/wordpress/migrate-institutional.php,dst=/migration.php,readonly \
+              -e WORDPRESS_DB_HOST=database:3306 \
+              -e WORDPRESS_DB_NAME=fundart_wp \
+              -e WORDPRESS_DB_USER=fundart_wp \
+              -e WORDPRESS_DB_PASSWORD="$FUNDART_STAGING_DB_PASSWORD" \
+              -e WORDPRESS_TABLE_PREFIX=fdt_ \
+              -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
+              wordpress:cli-php8.3 wp --path=/var/www/html eval-file /migration.php
+            for p in a-fundart objetivos equipe noticias; do
+              code="$(curl -s -L --max-time 14 -o /dev/null -w '%{http_code}' "https://fundart.mskpoeira.com.br/$p/")"
+              echo "PAGE=$p HTTP=$code"
+              test "$code" = 200
+            done
+            echo "MIGRATION_CYCLE_1=OK"
