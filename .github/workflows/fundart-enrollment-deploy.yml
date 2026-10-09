@@ -63,6 +63,8 @@ jobs:
               echo "PAGE=$page HTTP=$code"
               test "$code" = 200
             done
-            curl -fsSL --max-time 12 https://fundart.mskpoeira.com.br/inscricoes-oficinas/ | grep -q 'fundart_oficina_aluno'
-            curl -fsSL --max-time 12 https://fundart.mskpoeira.com.br/credenciamento-arte-educadores/ | grep -q 'fundart_oficina_educador'
+            curl -fsSL --max-time 12 https://fundart.mskpoeira.com.br/inscricoes-oficinas/ -o /tmp/fundart-aluno-form.html
+            grep -q 'fundart_oficina_aluno' /tmp/fundart-aluno-form.html
+            curl -fsSL --max-time 12 https://fundart.mskpoeira.com.br/credenciamento-arte-educadores/ -o /tmp/fundart-educador-form.html
+            grep -q 'fundart_oficina_educador' /tmp/fundart-educador-form.html
             echo "TWO_FORMS_DEPLOY=OK"
