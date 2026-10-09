@@ -2,7 +2,7 @@ name: Publicar cadastro completo FUNDART - homologacao
 on:
   push:
     branches: [main]
-    paths: [".github/workflows/fundart-student-fields-deploy.yml"]
+    paths: [".github/workflows/fundart-student-fields-deploy.yml", "wordpress/plugins/fundart-inscricoes/**"]
 permissions:
   contents: read
 jobs:
