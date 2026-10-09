@@ -1,0 +1,30 @@
+name: Inventário volumes WordPress FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/wordpress-storage.yml"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "4m"
+          script: |
+            set -eu
+            echo "=== STORAGE ==="
+            df -h /opt/fundart | tail -1
+            echo "=== DB MOUNT ==="
+            docker inspect fundart-wp-db --format '{{range .Mounts}}{{println .Type .Name .Destination}}{{end}}'
+            echo "=== WP MOUNT ==="
+            docker inspect fundart-wp-app --format '{{range .Mounts}}{{println .Type .Name .Destination}}{{end}}'
+            echo "=== DB SIZE ==="
+            docker exec fundart-wp-db sh -c 'du -sh /var/lib/mysql 2>/dev/null || true'
+            echo "=== NETWORK ==="
+            docker inspect fundart-wp-db --format '{{range $k,$v:=.NetworkSettings.Networks}}{{println $k}}{{end}}'
