@@ -1,0 +1,21 @@
+name: Verificar HTML publico original FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-html-check.yml"]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "3m"
+          script: |
+            set -eu
+            curl -fsSL --max-time 20 https://fundart.com.br/edital/edital-no-62-2025-credenciamento-no-03-2025-projeto-de-oficinas-culturais-arte-para-todos-2026/ | python3 -c 'import sys,re,html; s=sys.stdin.read(); title=re.search(r"<title[^>]*>(.*?)</title>",s,re.I|re.S); print("TITLE="+(html.unescape(title.group(1).strip())[:160] if title else "MISSING")); print("FIRST_TEXT="+html.unescape(re.sub(r"\s+"," ",re.sub(r"<[^>]*>"," ",s[:7000])).strip())[:240]); print("REQUIRED_CONTENT="+str("Arte para Todos" in s)); print("HTML_HEAD="+s[:120].replace("\n"," "))'
