@@ -1,0 +1,51 @@
+name: FUNDART — Publicar links dos formularios
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-enrollment-navigation.yml"]
+permissions:
+  contents: read
+concurrency:
+  group: fundart-enrollment-navigation
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "8m"
+          script: |
+            set -Eeuo pipefail
+            umask 077
+            cd /opt/fundart
+            set -a
+            . /opt/fundart-secrets/wordpress-staging.env
+            set +a
+            install -d -m 700 /opt/fundart-secrets/backups
+            docker exec -e MYSQL_PWD="$FUNDART_STAGING_ROOT_PASSWORD" fundart-wp-staging-db mariadb-dump -uroot --single-transaction fundart_wp > "/opt/fundart-secrets/backups/enrollment-nav-$(date +%Y%m%d-%H%M%S).sql"
+            git fetch -q origin main
+            git show origin/main:wordpress/setup-enrollment-navigation.php > wordpress/setup-enrollment-navigation.php
+            chmod 644 wordpress/setup-enrollment-navigation.php
+            docker run --rm --network fundart-wordpress-staging_fundart_staging_internal --user 33:33 \
+              --mount type=volume,src=fundart-wordpress-staging_fundart_staging_wp,dst=/var/www/html \
+              --mount type=bind,src=/opt/fundart/wordpress/themes/fundart,dst=/var/www/html/wp-content/themes/fundart,readonly \
+              --mount type=bind,src=/opt/fundart/wordpress/setup-enrollment-navigation.php,dst=/nav.php,readonly \
+              -e WORDPRESS_DB_HOST=database:3306 -e WORDPRESS_DB_NAME=fundart_wp \
+              -e WORDPRESS_DB_USER=fundart_wp -e WORDPRESS_DB_PASSWORD="$FUNDART_STAGING_DB_PASSWORD" \
+              -e WORDPRESS_TABLE_PREFIX=fdt_ \
+              -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
+              wordpress:cli-php8.3 wp --path=/var/www/html eval-file /nav.php
+            for slug in oficinas inscricoes-oficinas credenciamento-arte-educadores; do
+              code=$(curl -s -L --max-time 12 -o /dev/null -w '%{http_code}' "https://fundart.mskpoeira.com.br/$slug/")
+              echo "$slug=$code"
+              test "$code" = 200
+            done
+            curl -fsSL https://fundart.mskpoeira.com.br/oficinas/ -o /tmp/fundart-oficinas-links.html
+            grep -q '/inscricoes-oficinas/' /tmp/fundart-oficinas-links.html
+            grep -q '/credenciamento-arte-educadores/' /tmp/fundart-oficinas-links.html
+            echo "FORM_LINKS_VISIBLE=YES"
