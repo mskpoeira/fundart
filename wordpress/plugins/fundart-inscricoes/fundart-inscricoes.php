@@ -2,7 +2,7 @@
 /**
  * Plugin Name: FUNDART — Inscrições de Oficinas (Homologação)
  * Description: Formulários separados para oficinas e pré-cadastro de arte-educadores; envios de homologação, sem validade de inscrição oficial.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Requires PHP: 8.1
  */
 if (!defined('ABSPATH')) exit;
@@ -13,6 +13,7 @@ add_action('init', function () {
   'capability_type'=>'post','map_meta_cap'=>true,'supports'=>['title'],'menu_icon'=>'dashicons-forms',
  ]);
 });
+function fundart_modalidades_2026(): array { return ['Dança (Jazz)','Bordado','Tecelagem','Cestaria','Artesanato','Fibras Naturais','Plantas Alimentícias Não Convencionais (PANC)','Desenho','Piano','Cavaquinho','Violão']; }
 function fundart_inscricao_form(string $tipo): string {
  $aluno=$tipo==='aluno';
  $action=$aluno?'fundart_oficina_aluno':'fundart_oficina_educador';
@@ -31,11 +32,30 @@ function fundart_inscricao_form(string $tipo): string {
  <div class="fundart-hp" aria-hidden="true"><label>Deixe vazio<input type="text" name="fundart_website" tabindex="-1" autocomplete="off"></label></div>
  <div class="fundart-form-fields">
  <?php if($aluno): ?>
-  <label>Nome fictício para teste <input required maxlength="90" name="nome" autocomplete="off" placeholder="Ex.: Participante Teste"></label>
-  <label>Modalidade pretendida <input required maxlength="120" name="oficina" placeholder="Ex.: Música, teatro, dança"></label>
-  <label>Faixa etária <select name="faixa" required><option value="">Selecione</option><option value="menor">Menor de 18 anos</option><option value="adulto">18 anos ou mais</option></select></label>
-  <label>Contato de teste (e-mail) <input required type="email" maxlength="150" name="email" placeholder="teste@exemplo.com" autocomplete="off"></label>
-  <label>Responsável legal (apenas se menor; use nome fictício) <input maxlength="90" name="responsavel" autocomplete="off"></label>
+  <label>Nome completo do aluno <input required maxlength="120" name="nome" autocomplete="off" placeholder="Nome do aluno"></label>
+  <label>Modalidade desejada <select required name="oficina"><option value="">Selecione a modalidade</option><?php foreach(fundart_modalidades_2026() as $modalidade): ?><option value="<?php echo esc_attr($modalidade); ?>"><?php echo esc_html($modalidade); ?></option><?php endforeach; ?></select></label>
+  <label>CPF do aluno <input name="cpf" inputmode="numeric" pattern="[0-9. -]{11,14}" placeholder="000.000.000-00" autocomplete="off" required></label>
+  <label>RG do aluno <input name="rg" maxlength="30" autocomplete="off" required></label>
+  <label>Data de nascimento <input type="date" name="nascimento" max="<?php echo esc_attr(wp_date('Y-m-d')); ?>" required></label>
+  <label>Idade (calculada automaticamente) <input name="idade_visual" readonly type="number" min="0" max="120" aria-label="Idade calculada"></label>
+  <label>Telefone com DDD <input name="telefone" type="tel" maxlength="20" autocomplete="off" required></label>
+  <label>E-mail para contato <input name="email" type="email" maxlength="150" autocomplete="off" required></label>
+  <label>CEP <input name="cep" inputmode="numeric" maxlength="9" autocomplete="off" required></label>
+  <label>Logradouro <input name="logradouro" maxlength="160" autocomplete="off" required></label>
+  <label>Número <input name="numero" maxlength="20" autocomplete="off" required></label>
+  <label>Complemento <input name="complemento" maxlength="100" autocomplete="off"></label>
+  <label>Bairro <input name="bairro" maxlength="100" autocomplete="off" required></label>
+  <label>Cidade <input name="cidade" maxlength="100" value="Ubatuba" autocomplete="off" required></label>
+  <label>UF <select name="uf" required><option value="SP">São Paulo</option><option value="RJ">Rio de Janeiro</option><option value="MG">Minas Gerais</option><option value="PR">Paraná</option><option value="outros">Outra UF</option></select></label>
+  <fieldset class="fundart-responsavel" data-minor-fields hidden><legend>Responsável legal — obrigatório para menores de 18 anos</legend>
+    <label>Nome completo do responsável <input name="responsavel" maxlength="120" autocomplete="off"></label>
+    <label>CPF do responsável <input name="responsavel_cpf" inputmode="numeric" maxlength="14" autocomplete="off"></label>
+    <label>RG do responsável <input name="responsavel_rg" maxlength="30" autocomplete="off"></label>
+    <label>Telefone com DDD do responsável <input name="responsavel_telefone" type="tel" maxlength="20" autocomplete="off"></label>
+    <label>E-mail do responsável <input name="responsavel_email" type="email" maxlength="150" autocomplete="off"></label>
+    <label>Grau de parentesco / vínculo legal <select name="parentesco"><option value="">Selecione</option><option value="Mãe">Mãe</option><option value="Pai">Pai</option><option value="Avó/Avô">Avó/Avô</option><option value="Tutor(a)">Tutor(a)</option><option value="Guardião(ã)">Guardião(ã)</option><option value="Outro responsável legal">Outro responsável legal</option></select></label>
+  </fieldset>
+  <p class="fundart-form-note">Modalidades extraídas da programação FUNDART de 2026. A disponibilidade de turmas e vagas depende de confirmação da Fundação. Não utilize dados pessoais reais enquanto este ambiente estiver em homologação.</p>
  <?php else: ?>
   <label>Nome fictício / nome fantasia para teste <input required maxlength="120" name="nome" autocomplete="off" placeholder="Ex.: Arte Educador Teste"></label>
   <label>Área artística ou oficina proposta <input required maxlength="120" name="oficina" placeholder="Ex.: Artes visuais"></label>
@@ -65,9 +85,12 @@ function fundart_receber_inscricao(string $tipo): void {
  if(!$nome || !$oficina || !is_email($email) || mb_strlen($nome)>120 || mb_strlen($oficina)>120) $fail();
  $data=['tipo'=>$tipo,'nome'=>$nome,'oficina'=>$oficina,'email'=>$email,'ambiente'=>'homologacao'];
  if($tipo==='aluno'){
-  $faixa=sanitize_key(wp_unslash($_POST['faixa']??''));
+  $birth=sanitize_text_field(wp_unslash($_POST['nascimento']??''));
+  $birthdate=DateTimeImmutable::createFromFormat('!Y-m-d',$birth);
+  if(!$birthdate || $birthdate->format('Y-m-d')!==$birth || $birthdate>new DateTimeImmutable('today')) $fail();
+  $faixa=($birthdate->diff(new DateTimeImmutable('today'))->y<18)?'menor':'adulto';
   $responsavel=sanitize_text_field(wp_unslash($_POST['responsavel']??''));
-  if(!in_array($faixa,['menor','adulto'],true) || ($faixa==='menor' && $responsavel==='')) $fail();
+  if(!in_array($oficina,fundart_modalidades_2026(),true) || ($faixa==='menor' && ($responsavel==='' || empty($_POST['responsavel_telefone']) || empty($_POST['parentesco'])))) $fail();
   $data['faixa']=$faixa;
   $data['responsavel']=$faixa==='menor'?$responsavel:'';
  }else{
@@ -75,6 +98,9 @@ function fundart_receber_inscricao(string $tipo): void {
   if(!in_array($proponente,['MEI','Pessoa jurídica'],true)) $fail();
   $data['proponente']=$proponente;
  }
+ // Suspenso para dados pessoais reais: a operação oficial requer autorização institucional,
+ // política de privacidade publicada, retenção definida e infraestrutura protegida.
+ if($tipo==='aluno') $fail();
  $id=wp_insert_post(['post_type'=>'fundart_inscricao','post_status'=>'private','post_title'=>($tipo==='aluno'?'Aluno / ':'Arte-educador / ').wp_date('d/m/Y H:i:s'),'post_content'=>''],true);
  if(is_wp_error($id)) $fail();
  foreach($data as $key=>$value)update_post_meta($id,'_fundart_'.$key,$value);
