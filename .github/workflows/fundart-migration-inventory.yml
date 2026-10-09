@@ -1,0 +1,55 @@
+name: Inventario de migracao FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-migration-inventory.yml"]
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "8m"
+          script: |
+            set -Eeuo pipefail
+            umask 077
+            install -d -m 700 /opt/fundart-secrets/migration
+            python3 - <<'PY'
+            import urllib.request,urllib.parse,xml.etree.ElementTree as ET,json,collections,pathlib,datetime
+            base='https://fundart.com.br/sitemap_index.xml'
+            def fetch(url):
+                req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (compatible; FundartMigrationInventory/1.0)'})
+                with urllib.request.urlopen(req,timeout=20) as f:return f.read(8000000)
+            def locs(data):
+                root=ET.fromstring(data)
+                return [e.text.strip() for e in root.iter() if e.tag.endswith('loc') and e.text]
+            groups={}
+            urls=[]
+            errors=[]
+            for sm in locs(fetch(base)):
+                path=urllib.parse.urlparse(sm).path
+                try:
+                    entries=locs(fetch(sm))
+                    groups[path]=len(entries)
+                    for url in entries:
+                        p=urllib.parse.urlparse(url)
+                        if p.hostname in ('fundart.com.br','www.fundart.com.br'):
+                            urls.append({'url':url,'path':p.path,'sitemap':path,'status':'identificado_na_fonte'})
+                except Exception as e:
+                    errors.append({'sitemap':path,'error':type(e).__name__})
+            dest=pathlib.Path('/opt/fundart-secrets/migration')
+            (dest/'sitemap-inventory.json').write_text(json.dumps({'generated_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':base,'groups':groups,'urls':urls,'errors':errors},ensure_ascii=False,indent=1),encoding='utf8')
+            print('SITEMAPS=',len(groups))
+            print('SOURCE_URLS=',len(urls))
+            print('SITEMAP_ERRORS=',len(errors))
+            print('PAGE_URLS=',sum(v for k,v in groups.items() if 'page-sitemap' in k))
+            print('POST_URLS=',sum(v for k,v in groups.items() if 'post-sitemap' in k))
+            print('EDICT_URLS=',sum(v for k,v in groups.items() if 'edital-sitemap' in k))
+            print('INVENTORY_SAVED=YES')
+            PY
