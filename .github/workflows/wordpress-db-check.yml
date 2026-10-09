@@ -24,6 +24,14 @@ jobs:
             done
             echo "=== DB BACKUP FILES ==="
             find /opt/fundart-secrets /opt/fundart -maxdepth 2 -type f -name '*.sql*' -printf 'BACKUP=%p\n' 2>/dev/null | head -15 || true
+                        echo "=== SAVED ENV CREDENTIALS VALIDATION ==="
+            (
+              set -a
+              . /opt/fundart-secrets/wordpress.env
+              set +a
+              if [ -n "${FUNDART_DB_ROOT_PASSWORD:-}" ] && docker exec -i fundart-wp-db sh -c 'MYSQL_PWD="$1" mariadb -uroot -N -e "SELECT 1" >/dev/null 2>&1' -- "$FUNDART_DB_ROOT_PASSWORD"; then echo SAVED_ROOT_AUTH=OK; else echo SAVED_ROOT_AUTH=DENIED; fi
+              if [ -n "${FUNDART_DB_PASSWORD:-}" ] && docker exec -i fundart-wp-db sh -c 'MYSQL_PWD="$1" mariadb -ufundart_wp fundart_wp -N -e "SELECT 1" >/dev/null 2>&1' -- "$FUNDART_DB_PASSWORD"; then echo SAVED_APP_AUTH=OK; else echo SAVED_APP_AUTH=DENIED; fi
+            )
             echo "Checking DB admin access through local socket" 
             if docker exec -u root fundart-wp-db mariadb --protocol=socket -uroot -N -e "SELECT 1" >/dev/null 2>&1; then echo DB_SOCKET_ROOT=OK; else echo DB_SOCKET_ROOT=DENIED; fi
             echo "Checking DB admin access"
