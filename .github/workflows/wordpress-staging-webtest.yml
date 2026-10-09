@@ -1,0 +1,32 @@
+name: Testar URLs WordPress FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/wordpress-staging-webtest.yml"]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "3m"
+          script: |
+            set -eu
+            echo "=== PUBLIC STATUS ==="
+            for path in / /homologacao/ /homologacao/wp-login.php /homologacao/a-fundart/ /homologacao/ouvidoria/ /homologacao/wp-content/themes/fundart/style.css; do
+              url="https://fundart.mskpoeira.com.br$path"
+              curl --max-time 12 -sL -o /dev/null -w "PATH=$path HTTP=%{http_code} REDIRECTS=%{num_redirects} FINAL=%{url_effective}\n" "$url" || true
+            done
+            echo "=== FRONT TITLE ==="
+            curl -sL --max-time 12 https://fundart.mskpoeira.com.br/homologacao/ | head -c 500 | tr '\n' ' ' | cut -c1-500
+            echo
+            echo "=== CONTAINERS ==="
+            docker inspect fundart-wp-staging-app --format 'WP_RUNNING={{.State.Running}}'
+            docker inspect fundart-wp-staging-db --format 'WP_DB_RUNNING={{.State.Running}}'
+            docker inspect fundart-web-prod --format 'MAIN_RUNNING={{.State.Running}}'
