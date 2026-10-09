@@ -21,7 +21,7 @@ function fundart_inscricao_form(string $tipo): string {
  ob_start();
  ?>
  <section class="fundart-enrollment" aria-label="<?php echo esc_attr($title); ?>">
- <div class="notice"><strong>Ambiente de testes.</strong> O envio deste formulário registra uma simulação e <strong>não</strong> efetiva matrícula, credenciamento ou protocolo oficial. Não informe CPF, documentos ou dados reais de menores nesta fase.</div>
+ <div class="notice"><strong>Ambiente de testes.</strong> Os campos de cadastro completo estão em preparação. <strong>O envio de dados de alunos está temporariamente desabilitado</strong> até a aprovação institucional e a adequação da proteção dos dados pessoais. Não informe CPF, RG, endereço ou dados reais de menores neste ambiente de testes.</div>
  <?php if(isset($_GET['fundart_envio'])):
  $status=sanitize_key(wp_unslash($_GET['fundart_envio']));
  if($status==='ok'): ?><p class="fundart-form-message" role="status">Envio de teste registrado. Este registro não vale como inscrição oficial.</p>
@@ -70,6 +70,29 @@ function fundart_inscricao_form(string $tipo): string {
  </section>
  <?php return (string)ob_get_clean();
 }
+add_action('wp_footer',function(){ ?>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+ document.querySelectorAll('.fundart-enrollment form').forEach(function(form){
+  var birth=form.querySelector('[name="nascimento"]'), age=form.querySelector('[name="idade_visual"]'), section=form.querySelector('[data-minor-fields]');
+  if(!birth||!age||!section)return;
+  var fields=section.querySelectorAll('input,select');
+  function update(){
+   var b=birth.value?new Date(birth.value+'T12:00:00'):null, today=new Date(), years=NaN;
+   if(b&&!isNaN(b.getTime())&&b<=today){
+    years=today.getFullYear()-b.getFullYear();
+    if(today.getMonth()<b.getMonth()||(today.getMonth()===b.getMonth()&&today.getDate()<b.getDate()))years--;
+   }
+   age.value=Number.isFinite(years)?String(years):'';
+   var minor=Number.isFinite(years)&&years<18;
+   section.hidden=!minor;
+   fields.forEach(function(el){el.required=minor});
+  }
+  birth.addEventListener('change',update);update();
+ });
+});
+</script>
+<?php },20);
 add_shortcode('fundart_inscricao_aluno',static fn() => fundart_inscricao_form('aluno'));
 add_shortcode('fundart_pre_cadastro_educador',static fn() => fundart_inscricao_form('educador'));
 
