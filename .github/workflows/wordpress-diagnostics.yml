@@ -1,0 +1,36 @@
+name: Diagnosticar WordPress FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/wordpress-diagnostics.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: "90s"
+          command_timeout: "3m"
+          script: |
+            set -eu
+            echo "=== STATUS ==="
+            docker inspect fundart-wp-app --format 'WP_RUNNING={{.State.Running}} WP_HEALTH={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}'
+            docker inspect fundart-wp-db --format 'DB_RUNNING={{.State.Running}}'
+            docker inspect fundart-web-prod --format 'STATIC_RUNNING={{.State.Running}}'
+            echo "=== HTTP ==="
+            for endpoint in / /wp-login.php /wp-admin/; do
+              curl -s -o /dev/null -w "PATH=$endpoint HTTP=%{http_code} ERROR=%{errormsg}\n" --max-time 8 "http://127.0.0.1:63251$endpoint" || true
+            done
+            echo "=== PHP LINT ==="
+            docker exec fundart-wp-app php -l /var/www/html/wp-config.php
+            echo "=== WP CONFIG ==="
+            docker exec fundart-wp-app php -r '$s=getenv("WORDPRESS_CONFIG_EXTRA"); $p=proc_open("php -l",[0=>["pipe","r"],1=>["pipe","w"],2=>["pipe","w"]],$pipes); if(is_resource($p)){fwrite($pipes[0],"<?php\n".$s);fclose($pipes[0]); $o=stream_get_contents($pipes[1]);fclose($pipes[1]); $e=stream_get_contents($pipes[2]);fclose($pipes[2]); echo "EXTRA_PHP_LINT_EXIT=".proc_close($p).PHP_EOL;}' || true
+            echo "=== RECENT ERRORS (REDACTED) ==="
+            docker logs --tail 24 fundart-wp-app 2>&1 | sed -E 's/(password|passwd|secret|token|key)=([^ ,;]+)/\1=[REDACTED]/Ig' | tail -24
