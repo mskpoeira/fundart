@@ -40,7 +40,7 @@ foreach($inventory['urls']??[] as $entry){
  $html=wp_kses_post($html);
  if(mb_strlen(wp_strip_all_tags($html))<70){$failed++;continue;}
  // Convert ONLY exact internal links to the test domain; other links untouched.
- $html=str_replace(['https://www.fundart.com.br/','https://fundart.com.br/'],[home_url('/'),home_url('/')],$html);
+ // Keep original links until their destination is verified as migrated; avoids dead local URLs.
  $id=wp_insert_post(['post_type'=>'page','post_status'=>'publish','post_title'=>$title,'post_name'=>$slug,'post_content'=>$html],true);
  if(is_wp_error($id)){$failed++;continue;}
  update_post_meta($id,'_fundart_original_url',esc_url_raw($source));
