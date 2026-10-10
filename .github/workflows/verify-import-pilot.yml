@@ -1,0 +1,19 @@
+name: Verificar primeiro lote FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/verify-import-pilot.yml"]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          set -euo pipefail
+          for p in carnaval-historico festival-de-marchinhas comunidades imprensa perguntas-frequentes links-uteis calendario-de-reunioes-ordinarias-dos-grupos-setoriais-da-fundart-e-conselhos-2026; do
+            code=$(curl -L --retry 2 --max-time 22 -s -o "/tmp/$p.html" -w '%{http_code}' "https://fundart.mskpoeira.com.br/$p/")
+            echo "$p=$code bytes=$(wc -c < "/tmp/$p.html")"
+            test "$code" = "200"
+          done
+          echo "PILOT_URLS_HTTP=OK"
