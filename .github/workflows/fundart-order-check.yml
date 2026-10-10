@@ -1,0 +1,42 @@
+name: FUNDART - verificar ordem cronologica em todo o site
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-order-check.yml"]
+permissions:
+  contents: read
+jobs:
+  chronology:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Instalar analisador HTML
+        run: python -m pip install --quiet requests beautifulsoup4
+      - name: Conferir datas e listagens publicas
+        run: |
+          python - <<'PY'
+          import requests,datetime
+          from bs4 import BeautifulSoup
+          b='https://fundart.mskpoeira.com.br'
+          samples=[
+            ('pagina de Noticias','/noticias/', '.news-grid .news-card time', 'datetime'),
+            ('Acervo filtrado por Noticias','/acervo/?acervo_tipo=post','.fundart-acervo-lista article small',None),
+            ('destaques da pagina inicial','/','.news-grid .news-card .body p:first-child',None)
+          ]
+          for label,path,selector,attr in samples:
+            r=requests.get(b+path,timeout=25)
+            r.raise_for_status()
+            s=BeautifulSoup(r.text,'html.parser')
+            raw=[el.get(attr) if attr else el.get_text(' ',strip=True) for el in s.select(selector)]
+            if not raw:
+              raise SystemExit(f'FAIL NO_NEWS_DATES {label}: {path}')
+            dates=[]
+            for v in raw:
+              if attr=='datetime':
+                dates.append(datetime.datetime.fromisoformat(v.replace('Z','+00:00')).date())
+              else:
+                dates.append(datetime.datetime.strptime(v[:10],'%d/%m/%Y').date())
+            print('ORDER_CHECK',label,'count=',len(dates),'dates=',[x.isoformat() for x in dates[:6]])
+            if dates!=sorted(dates,reverse=True):
+              raise SystemExit(f'FAIL NOT_DESCENDING {label}')
+          print('CHRONOLOGY_PUBLIC_OK=YES')
+          PY
