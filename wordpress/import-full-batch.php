@@ -18,7 +18,7 @@ if(!$size) WP_CLI::error('No valid sources');
 $cursor=(int)get_option('fundart_full_import_cursor',0);
 $limit=max(1,min(300,(int)(getenv('FUNDART_BATCH_LIMIT')?:250)));
 $visited=0;$added=0;$existing=0;$deferred=0;$errors=0;$error_samples=[];
-while($visited<$size && $added<$limit){
+while($visited<$size && $visited<160 && $added<$limit){
  $r=$records[($cursor+$visited)%$size];$visited++;
  $path=trim($r['path'],'/');$segments=explode('/',$path);$slug=end($segments);
  if(in_array($slug,['carousel-slider','navegador-de-arquivos'],true))continue;
@@ -31,7 +31,7 @@ while($visited<$size && $added<$limit){
   if(!$record){$deferred++;continue;}
   $parent=(int)$record->ID;
  }
- $response=wp_remote_get($r['url'],['timeout'=>14,'redirection'=>3,'user-agent'=>'FUNDART-StagingMigration/2.0']);
+ $response=wp_remote_get($r['url'],['timeout'=>7,'redirection'=>3,'user-agent'=>'FUNDART-StagingMigration/2.0']);
  if(is_wp_error($response)||wp_remote_retrieve_response_code($response)!==200){$errors++;if(count($error_samples)<20)$error_samples[]=$path.':fetch';continue;}
  $raw=wp_remote_retrieve_body($response);
  if(strlen($raw)<450||strlen($raw)>2500000){$errors++;continue;}
