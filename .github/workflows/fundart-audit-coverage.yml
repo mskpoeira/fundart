@@ -1,0 +1,32 @@
+name: FUNDART auditoria de cobertura do acervo
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-audit-coverage.yml"]
+permissions:
+  contents: read
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "5m"
+          script: |
+            set -e
+            python3 - <<'PY'
+            import json,collections
+            j=json.load(open('/opt/fundart-secrets/migration/sitemap-inventory.json'))
+            urls=j.get('urls',[])
+            print('INVENTORY_TOTAL',len(urls))
+            for term in ('page-sitemap','post-sitemap','attachment-sitemap','category-sitemap'):
+              x=[v for v in urls if term in str(v.get('sitemap',''))]
+              print(term, len(x))
+            exts=collections.Counter(str(v.get('path','')).rsplit('.',1)[-1].lower() for v in urls if '.' in str(v.get('path','')).rsplit('/',1)[-1])
+            print('FILE_EXTENSIONS',exts.most_common(12))
+            PY
+            echo COVERAGE_AUDIT_SOURCE=OK
