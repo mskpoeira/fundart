@@ -1,0 +1,29 @@
+name: AUDITORIA FUNDART - Formulario de alunos publicado
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-inscricao-probe.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: python -m pip install --quiet requests beautifulsoup4
+      - run: |
+          python - <<'PY'
+          import requests
+          from bs4 import BeautifulSoup
+          u='https://fundart.mskpoeira.com.br/inscricoes-oficinas/'
+          r=requests.get(u,timeout=30)
+          s=BeautifulSoup(r.text,'html.parser')
+          print('HTTP',r.status_code)
+          print('SHORTCODE_LITERAL', '[fundart_inscricao_aluno]' in r.text)
+          sections=s.select('.fundart-enrollment')
+          print('ENROLLMENT_SECTIONS',len(sections))
+          for x in sections:
+              print('FORM_LABEL',x.get('aria-label'))
+              print('BUTTONS',[(b.get_text(' ',strip=True)[:70],b.has_attr('disabled')) for b in x.select('button')])
+              print('FORM_ACTIONS',[h.get('value') for h in x.select('input[name=action]')])
+              print('STUDENT_FIELDS',len(x.select('input[name=nascimento]')))
+          PY
