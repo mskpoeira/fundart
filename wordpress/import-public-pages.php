@@ -32,7 +32,8 @@ foreach($seed_paths as $seed){
  if(!$elements || !$elements->length || !$heads || !$heads->length){WP_CLI::log('SEED_CONTENT_MISSING '.$seed);continue;}
  $html='';foreach($elements->item(0)->childNodes as $child)$html.=$dom->saveHTML($child);
  $html=wp_kses_post($html);$title=trim($heads->item(0)->textContent);
- if(!$title||mb_strlen(wp_strip_all_tags($html))<50){WP_CLI::log('SEED_CONTENT_SHORT '.$seed);continue;}
+ if(!$title){WP_CLI::log('SEED_TITLE_MISSING '.$seed);continue;}
+ if(mb_strlen(wp_strip_all_tags($html))<50)$html.='<p>Seção de navegação do acervo cultural da FUNDART. Consulte as subpáginas desta área.</p>';
  $id=wp_insert_post(['post_type'=>'page','post_status'=>'publish','post_title'=>$title,'post_name'=>$leaf,'post_parent'=>$pid,'post_content'=>$html],true);
  if(is_wp_error($id)){WP_CLI::log('SEED_FAILED '.$seed);continue;}
  update_post_meta($id,'_fundart_original_url',$url);
