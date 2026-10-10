@@ -1,0 +1,22 @@
+name: AUDITORIA PROFUNDA FUNDART - Site publico
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-public-audit.yml"]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencias leves para analise HTTP
+        run: python -m pip install --quiet requests beautifulsoup4
+      - name: Auditar enderecos e fidelidade de amostras (somente GET)
+        run: |
+          python audit/public_audit.py | tee public-audit.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fundart-public-audit-report
+          path: public-audit.jsonl
+          retention-days: 14
