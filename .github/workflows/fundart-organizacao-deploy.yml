@@ -1,0 +1,76 @@
+name: FUNDART - Organizar Editais e Navegacao
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fundart-organizacao-deploy.yml"
+      - "wordpress/plugins/fundart-organizacao/**"
+      - "wordpress/setup-organizacao.php"
+permissions:
+  contents: read
+concurrency:
+  group: fundart-organizacao-staging
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar codigo
+        run: |
+          php -l wordpress/plugins/fundart-organizacao/fundart-organizacao.php
+          php -l wordpress/setup-organizacao.php
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "10m"
+          script: |
+            set -Eeuo pipefail
+            umask 077
+            cd /opt/fundart
+            test "$(docker inspect -f '{{.State.Running}}' fundart-wp-staging-app)" = true
+            set -a
+            . /opt/fundart-secrets/wordpress-staging.env
+            set +a
+            install -d -m 700 /opt/fundart-secrets/backups
+            backup="/opt/fundart-secrets/backups/before-organizacao-$(date +%Y%m%d-%H%M%S).sql"
+            docker exec -e MYSQL_PWD="$FUNDART_STAGING_ROOT_PASSWORD" fundart-wp-staging-db mariadb-dump -uroot --single-transaction fundart_wp > "$backup"
+            test -s "$backup"
+            chmod 600 "$backup"
+            echo DB_BACKUP=OK
+            git fetch -q origin main
+            install -d -m 755 wordpress/plugins/fundart-organizacao
+            git show origin/main:wordpress/plugins/fundart-organizacao/fundart-organizacao.php > wordpress/plugins/fundart-organizacao/fundart-organizacao.php
+            git show origin/main:wordpress/setup-organizacao.php > wordpress/setup-organizacao.php
+            chmod 644 wordpress/plugins/fundart-organizacao/fundart-organizacao.php wordpress/setup-organizacao.php
+            docker exec fundart-wp-staging-app mkdir -p /var/www/html/wp-content/plugins/fundart-organizacao
+            docker cp wordpress/plugins/fundart-organizacao/fundart-organizacao.php fundart-wp-staging-app:/var/www/html/wp-content/plugins/fundart-organizacao/fundart-organizacao.php
+            docker exec fundart-wp-staging-app php -l /var/www/html/wp-content/plugins/fundart-organizacao/fundart-organizacao.php
+            docker run --rm --network fundart-wordpress-staging_fundart_staging_internal --user 33:33 \
+              --mount type=volume,src=fundart-wordpress-staging_fundart_staging_wp,dst=/var/www/html \
+              --mount type=bind,src=/opt/fundart/wordpress/themes/fundart,dst=/var/www/html/wp-content/themes/fundart,readonly \
+              --mount type=bind,src=/opt/fundart/wordpress/setup-organizacao.php,dst=/setup.php,readonly \
+              -e WORDPRESS_DB_HOST=database:3306 -e WORDPRESS_DB_NAME=fundart_wp \
+              -e WORDPRESS_DB_USER=fundart_wp -e WORDPRESS_DB_PASSWORD="$FUNDART_STAGING_DB_PASSWORD" \
+              -e WORDPRESS_TABLE_PREFIX=fdt_ \
+              -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
+              wordpress:cli-php8.3 wp --path=/var/www/html plugin activate fundart-organizacao
+            docker run --rm --network fundart-wordpress-staging_fundart_staging_internal --user 33:33 \
+              --mount type=volume,src=fundart-wordpress-staging_fundart_staging_wp,dst=/var/www/html \
+              --mount type=bind,src=/opt/fundart/wordpress/themes/fundart,dst=/var/www/html/wp-content/themes/fundart,readonly \
+              --mount type=bind,src=/opt/fundart/wordpress/setup-organizacao.php,dst=/setup.php,readonly \
+              -e WORDPRESS_DB_HOST=database:3306 -e WORDPRESS_DB_NAME=fundart_wp \
+              -e WORDPRESS_DB_USER=fundart_wp -e WORDPRESS_DB_PASSWORD="$FUNDART_STAGING_DB_PASSWORD" \
+              -e WORDPRESS_TABLE_PREFIX=fdt_ \
+              -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
+              wordpress:cli-php8.3 wp --path=/var/www/html eval-file /setup.php
+            for slug in editais/licitacoes editais/convocacoes editais/credenciamentos editais/concursos editais/fomento editais/institucionais; do
+              code="$(curl -LsS -o /dev/null -w '%{http_code}' --max-time 22 "https://fundart.mskpoeira.com.br/$slug/")"
+              echo "$slug HTTP=$code"
+              test "$code" = 200
+            done
+            echo ORGANIZACAO_DEPLOY_OK=YES
