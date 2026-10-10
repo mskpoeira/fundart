@@ -127,11 +127,42 @@ add_filter('wp_nav_menu_items',function(string $items,$args):string{
   return $items;
 },20,2);
 
-/** Aplica ordem cronológica decrescente às listagens nativas de notícias. */
+/**
+ * Ordenação geral das publicações: novas -> antigas.
+ * Aplica-se a notícias, editais, eventos, oficinas, conselhos,
+ * pesquisas e arquivos de categorias/taxonomias; páginas institucionais
+ * isoladas e menus não são reordenados.
+ * A data usada é a publicação (post_date); nunca a data de importação.
+ */
 add_action('pre_get_posts',static function(WP_Query $query):void {
   if (is_admin() || !$query->is_main_query()) return;
-  if ($query->is_home() || $query->is_category() || $query->is_tag() || $query->is_date() || $query->is_author()) {
+  if (
+    $query->is_home() ||
+    $query->is_post_type_archive() ||
+    $query->is_category() ||
+    $query->is_tag() ||
+    $query->is_tax() ||
+    $query->is_date() ||
+    $query->is_author() ||
+    $query->is_search()
+  ) {
     $query->set('orderby',['date'=>'DESC','ID'=>'DESC']);
+    $query->set('order','DESC');
     $query->set('ignore_sticky_posts',true);
   }
 });
+
+/**
+ * Consultas cronológicas em componentes do tema e páginas especiais.
+ * Ordenação estável quando publicações têm a mesma data.
+ */
+function fundart_consulta_recentes(array $types, int $limit=20, int $page=1):WP_Query {
+  return new WP_Query([
+    'post_type'=>$types,
+    'post_status'=>'publish',
+    'posts_per_page'=>max(1,min(100,$limit)),
+    'paged'=>max(1,$page),
+    'orderby'=>['date'=>'DESC','ID'=>'DESC'],
+    'ignore_sticky_posts'=>true
+  ]);
+}
