@@ -1,0 +1,21 @@
+name: Verificar noticias migradas FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/verify-fundart-news.yml"]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          set -euo pipefail
+          for slug in projeto-guri-abre-inscricoes-para-segundo-semestre-de-2016 oficina-de-danca-fundart-recebe-13-premios-no-festival-danca-ubatuba conheca-a-programacao-dos-ensaios-do-11o-festival-de-marchinhas; do
+            code=$(curl -LsS --max-time 20 -o "/tmp/$slug.html" -w '%{http_code}' "https://fundart.mskpoeira.com.br/$slug/")
+            echo "$slug HTTP=$code"
+            test "$code" = 200
+          done
+          curl -fLsS --max-time 20 https://fundart.mskpoeira.com.br/acervo/ -o /tmp/acervo.html
+          grep -q fundart-acervo-lista /tmp/acervo.html
+          echo NEWS_AND_INDEX_HTTP_OK=YES
