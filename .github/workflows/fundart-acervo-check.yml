@@ -1,0 +1,20 @@
+name: Verificar indice Acervo FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-acervo-check.yml"]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir navegação do acervo
+        run: |
+          set -e
+          curl -fLsS --max-time 30 https://fundart.mskpoeira.com.br/acervo/ -o acervo.html
+          grep -q 'acervo_busca' acervo.html
+          grep -q 'fundart-acervo-lista' acervo.html
+          curl -fLsS --max-time 30 https://fundart.mskpoeira.com.br/ -o inicio.html
+          grep -q 'Todas as páginas' inicio.html
+          echo ACERVO_NAVIGATION_OK
