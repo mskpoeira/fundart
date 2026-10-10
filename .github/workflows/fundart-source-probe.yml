@@ -1,0 +1,29 @@
+name: FUNDART inspecionar estrutura para importacao
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-source-probe.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          python -m pip install --quiet beautifulsoup4 lxml
+          python - <<'PY'
+          import requests,bs4,re
+          u='https://fundart.com.br/a-fundart/'
+          s=bs4.BeautifulSoup(requests.get(u,timeout=30).text,'lxml')
+          h=s.find('h1')
+          print('TITLE_H1=',h.get_text(' ',strip=True)[:200] if h else None)
+          if h:
+           for p in list(h.parents)[:7]:
+            print('PARENT=',p.name,p.get('class'),p.get('id'),'TEXT=',len(p.get_text(' ',strip=True)),'CHILDREN=',len(p.find_all(recursive=False)))
+          for x in s.find_all(['article','section','div']):
+           if len(x.get_text(' ',strip=True))>450 and len(x.get_text(' ',strip=True))<3400 and ('Fundação' in x.get_text(' ',strip=True)):
+            print('CANDIDATE',x.name,x.get('class'),x.get('id'),'LENGTH',len(x.get_text(' ',strip=True)),'PREVIEW',x.get_text(' ',strip=True)[:130])
+            if len(str(x))<7000: print('HTML',str(x)[:950])
+            break
+          print('BODYTEXT=',s.get_text(' ',strip=True)[-800:])
+          PY
