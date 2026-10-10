@@ -2,9 +2,43 @@
 /**
  * Plugin Name: FUNDART — Anexos preenchíveis Arte para Todos
  * Description: Anexos II a VI separados, preenchimento local no navegador e impressão/salvamento em PDF, sem transmissão de dados.
- * Version: 1.4.0
+ * Version: 1.5.0
  */
 defined('ABSPATH') || exit;
+function fda_bcb_banks():array {
+ $cache=get_transient('fda_bcb_banks_v1');
+ if(is_array($cache)&&count($cache)>5)return $cache;
+ $url='https://www.bcb.gov.br/pom/spb/ing/ParticipantesSTRIng.csv';
+ $response=wp_remote_get($url,['timeout'=>12,'redirection'=>3,'headers'=>['Accept'=>'text/csv']]);
+ if(is_wp_error($response)||wp_remote_retrieve_response_code($response)!==200)return is_array($cache)?$cache:[];
+ $raw=wp_remote_retrieve_body($response);
+ if(strlen($raw)>3000000)return [];
+ $lines=preg_split('/\\r\\n|\\r|\\n/',trim($raw));
+ if(count($lines)<6)return [];
+ $first=$lines[0];
+ $delimiter=substr_count($first,';')>=substr_count($first,',')?';':',';
+ $header=array_map(static fn($v)=>remove_accents(mb_strtolower(trim($v))),str_getcsv($first,$delimiter));
+ $name_index=null;$ispb_index=null;
+ foreach($header as $i=>$h){
+  if($name_index===null && preg_match('/nome|institu|name|denomina|razao/', $h))$name_index=$i;
+  if($ispb_index===null && (str_contains($h,'ispb')||str_contains($h,'identificador')))$ispb_index=$i;
+ }
+ // Se os titulos nao forem reconhecidos, nao produzir opcoes potencialmente erradas.
+ if($name_index===null)return [];
+ $banks=[];
+ foreach(array_slice($lines,1) as $line){
+  $cols=str_getcsv($line,$delimiter);
+  $name=isset($cols[$name_index])?sanitize_text_field(trim($cols[$name_index])):'';
+  $ispb=$ispb_index!==null?preg_replace('/\\D/','',$cols[$ispb_index]??''):'';
+  if($name===''||mb_strlen($name)<3||mb_strlen($name)>140)continue;
+  $label=$ispb?($name.' — ISPB '.str_pad($ispb,8,'0',STR_PAD_LEFT)):$name;
+  $banks[$label]=$label;
+ }
+ if(count($banks)<5)return [];
+ natcasesort($banks);
+ set_transient('fda_bcb_banks_v1',array_values($banks),DAY_IN_SECONDS);
+ return array_values($banks);
+}
 function fda_forms():array {
  $ident=[['nome','Nome do arte-educador'],['cnpj','CNPJ/MF (se MEI)']];
  return [
@@ -15,7 +49,7 @@ function fda_forms():array {
   ['pis','PIS / NIT / INSS'],['inscricao_municipal','Inscrição municipal'],
   ['rg','CI / RG'],['cpf','CPF'],['email','E-mail'],
   ['section','Dados bancários para depósito'],['tipo_conta','Tipo de conta','select','Conta jurídica|Conta física'],
-  ['banco','Banco'],['agencia','Agência'],['conta','Conta'],['pix_tipo','Tipo de chave Pix','select','Automático|CPF|CNPJ|Telefone|E-mail|Chave aleatória'],['pix','Chave Pix (se houver)'],
+  ['banco','Banco / instituição financeira','bank'],['banco_outro','Outra instituição (se não constar da lista)'],['agencia','Agência'],['conta','Conta'],['pix_tipo','Tipo de chave Pix','select','Automático|CPF|CNPJ|Telefone|E-mail|Chave aleatória'],['pix','Chave Pix (se houver)'],
   ['section','2. Oficinas culturais pretendidas'],['opcao1','Opção 1','select','Bordado|Capoeira|Cavaquinho|Dança (Ballet Clássico)|Dança (Jazz)|Danças Étnicas|Fibras Naturais|Piano|Teatro|Tecelagem|Violão|Proposta Livre'],['opcao2','Opção 2','select','Bordado|Capoeira|Cavaquinho|Dança (Ballet Clássico)|Dança (Jazz)|Danças Étnicas|Fibras Naturais|Piano|Teatro|Tecelagem|Violão|Proposta Livre'],
   ['imagem','Autorização de uso de nome e imagem conforme o edital','select','Não autorizo|Autorizo'],
   ['declaracao','Declaro estar de acordo com as condições do edital','checkbox'],
@@ -81,6 +115,13 @@ function fda_render(string $id):string {
     <label class="fda-field <?php echo $type==='textarea'?'fda-full':''; ?>">
     <span><?php echo esc_html($label); ?></span>
     <?php if($type==='textarea'):?><textarea rows="6" name="<?php echo esc_attr($key); ?>"></textarea>
+    <?php elseif($type==='bank'):?>
+      <select name="<?php echo esc_attr($key); ?>" class="fda-bank-select">
+       <option value="">Selecione a instituição</option>
+       <?php foreach(fda_bcb_banks() as $bank):?><option value="<?php echo esc_attr($bank); ?>"><?php echo esc_html($bank); ?></option><?php endforeach;?>
+       <option value="outra">Outra instituição / não localizada</option>
+      </select>
+      <small>Fonte: relação pública de participantes do STR — Banco Central do Brasil. Algumas instituições de pagamento podem não constar da relação.</small>
     <?php elseif($type==='select'):?><select name="<?php echo esc_attr($key); ?>"><option value="">Selecione</option><?php foreach(explode('|',$field[3]) as $option):?><option><?php echo esc_html($option); ?></option><?php endforeach;?></select>
     <?php elseif($type==='checkbox'):?><input type="checkbox" name="<?php echo esc_attr($key); ?>"> <small>Confirmo esta declaração</small>
     <?php else:?><input type="<?php echo $type==='date'?'date':'text'; ?>" name="<?php echo esc_attr($key); ?>" maxlength="350"><?php endif;?>
