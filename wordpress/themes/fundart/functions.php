@@ -58,7 +58,7 @@ function fundart_link_current_or_legacy(string $type,string $legacy): string {
   return post_type_exists($type) ? esc_url(get_post_type_archive_link($type) ?: fundart_original($legacy)) : fundart_original($legacy);
 }
 function fundart_fallback_menu(): void {
-  $items=['/' => 'Início','/a-fundart/' => 'A FundArt','/agenda/' => 'Agenda','/oficinas/' => 'Oficinas','/editais/' => 'Editais','/projetos-acoes/' => 'Projetos e Ações','/conselhos/' => 'Conselhos','/transparencia/' => 'Transparência','/ouvidoria/' => 'Ouvidoria Setorial'];
+  $items=['/' => 'Início','/a-fundart/' => 'A FundArt','/agenda/' => 'Agenda','/oficinas/' => 'Oficinas','/editais/' => 'Editais','/projetos-acoes/' => 'Projetos e Ações','/conselhos/' => 'Conselhos','/transparencia/' => 'Transparência','/ouvidoria/' => 'Ouvidoria Setorial','/acervo/' => 'Todas as Páginas'];
   echo '<ul>';
   foreach ($items as $url=>$label) echo '<li><a href="'.fundart_link($url).'">'.esc_html($label).'</a></li>';
   echo '</ul>';
@@ -82,3 +82,47 @@ add_action('customize_register',function(WP_Customize_Manager $c):void {
     $c->add_control($id,['label'=>$meta[0],'section'=>'fundart_portal','type'=>'text']);
   }
 });
+
+/** Índice dinâmico do acervo efetivamente publicado no WordPress. */
+add_shortcode('fundart_acervo',function():string {
+  $search=isset($_GET['acervo_busca'])?sanitize_text_field(wp_unslash($_GET['acervo_busca'])):'';
+  $type=isset($_GET['acervo_tipo'])?sanitize_key(wp_unslash($_GET['acervo_tipo'])):'';
+  $allowed=['page','post','fundart_edital','fundart_evento','fundart_oficina','fundart_conselho'];
+  if(!in_array($type,$allowed,true))$type='';
+  $args=['post_type'=>$type?:$allowed,'post_status'=>'publish','posts_per_page'=>60,'paged'=>max(1,(int)(get_query_var('paged')?:($_GET['pagina']??1))),'orderby'=>'date','order'=>'DESC','ignore_sticky_posts'=>true];
+  if($search!=='')$args['s']=$search;
+  $query=new WP_Query($args);
+  $action=get_permalink();
+  $out='<div class="fundart-acervo"><form action="'.esc_url($action).'" method="get" role="search" class="fundart-acervo-busca"><label for="acervo_busca">Pesquisar no acervo</label><input id="acervo_busca" name="acervo_busca" value="'.esc_attr($search).'" placeholder="Nome da página, notícia ou edital"><label for="acervo_tipo">Tipo de conteúdo</label><select id="acervo_tipo" name="acervo_tipo"><option value="">Todos</option>';
+  foreach(['page'=>'Páginas e subpáginas','post'=>'Notícias','fundart_edital'=>'Editais','fundart_evento'=>'Eventos','fundart_oficina'=>'Oficinas','fundart_conselho'=>'Conselhos'] as $key=>$value)$out.='<option value="'.esc_attr($key).'" '.selected($type,$key,false).'>'.esc_html($value).'</option>';
+  $out.='</select><button type="submit">Pesquisar</button></form><p>'.number_format_i18n((int)$query->found_posts).' resultados publicados</p><div class="fundart-acervo-lista">';
+  if(!$query->have_posts())$out.='<p>Nenhum conteúdo encontrado.</p>';
+  while($query->have_posts()){
+    $query->the_post();
+    $out.='<article><span>'.esc_html(get_post_type_object(get_post_type())->labels->singular_name).'</span><h3><a href="'.esc_url(get_permalink()).'">'.esc_html(get_the_title()).'</a></h3><small>'.esc_html(get_the_date('d/m/Y')).'</small></article>';
+  }
+  wp_reset_postdata();$out.='</div>';
+  $total=(int)$query->max_num_pages;$current=(int)$args['paged'];
+  if($total>1){$out.='<nav class="fundart-acervo-paginas" aria-label="Paginação do acervo">';
+    if($current>1)$out.='<a href="'.esc_url(add_query_arg(['pagina'=>$current-1,'acervo_busca'=>$search,'acervo_tipo'=>$type],$action)).'">← Anteriores</a>';
+    $out.='<span>Página '.esc_html((string)$current).' de '.esc_html((string)$total).'</span>';
+    if($current<$total)$out.='<a href="'.esc_url(add_query_arg(['pagina'=>$current+1,'acervo_busca'=>$search,'acervo_tipo'=>$type],$action)).'">Próximos →</a>';
+    $out.='</nav>';
+  }
+  return $out.'</div>';
+});
+add_action('init',function(){
+  if(get_option('fundart_acervo_page_created'))return;
+  $page=get_page_by_path('acervo',OBJECT,'page');
+  if(!$page){
+    $id=wp_insert_post(['post_type'=>'page','post_status'=>'publish','post_title'=>'Acervo FUNDART — Todas as páginas e notícias','post_name'=>'acervo','post_content'=>'Consulte as páginas, notícias e documentos já publicados no site de testes. O acervo original ainda está em migração. [fundart_acervo]'],true);
+    if(is_wp_error($id))return;
+  }
+  update_option('fundart_acervo_page_created',1,false);
+},20);
+add_filter('wp_nav_menu_items',function(string $items,$args):string{
+  if(isset($args->theme_location)&&$args->theme_location==='principal'&&!str_contains($items,'/acervo/')){
+    $items.='<li class="menu-item menu-item-acervo"><a href="'.esc_url(home_url('/acervo/')).'">Todas as páginas</a></li>';
+  }
+  return $items;
+},20,2);
