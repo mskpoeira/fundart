@@ -1,8 +1,8 @@
-name: FUNDART Publicar Anexos II a VI
+name: FUNDART Publicar Anexos I a VI
 on:
   push:
     branches: [main]
-    paths: [".github/workflows/fundart-anexos-deploy.yml"]
+    paths: [".github/workflows/fundart-anexos-deploy.yml", "wordpress/plugins/fundart-anexos/**", "wordpress/setup-annexes.php"]
 permissions:
   contents: read
 jobs:
@@ -56,10 +56,13 @@ jobs:
               -e WORDPRESS_TABLE_PREFIX=fdt_ \
               -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
               wordpress:cli-php8.3 wp --path=/var/www/html eval-file /setup-annexes.php
+            curl -fsSL --max-time 14 "https://fundart.mskpoeira.com.br/anexo-i-projeto-arte-para-todos/" -o /tmp/anexo-i.html
+            grep -q 'Capoeira' /tmp/anexo-i.html
             for slug in anexo-ii-ficha-inscricao anexo-iii-plano-trabalho anexo-iv-capacidade-tecnica anexo-v-fato-impeditivo anexo-vi-recurso; do
               curl -fsSL --max-time 14 "https://fundart.mskpoeira.com.br/$slug/" -o "/tmp/$slug.html"
               grep -q 'fda-print' "/tmp/$slug.html"
               grep -q 'fda-download' "/tmp/$slug.html"
               echo "$slug=OK"
             done
-            echo "FIVE_ANNEXES_DEPLOY=OK"
+            grep -q 'fda-file-input' /tmp/anexo-ii-ficha-inscricao.html
+            echo "SIX_ANNEXES_AND_FILES_DEPLOY=OK"
