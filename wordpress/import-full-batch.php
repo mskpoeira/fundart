@@ -16,7 +16,7 @@ foreach($inv['urls'] as $entry){
 $records=array_values($records);$size=count($records);
 if(!$size) WP_CLI::error('No valid sources');
 $cursor=(int)get_option('fundart_full_import_cursor',0);
-$limit=max(1,min(120,(int)(getenv('FUNDART_BATCH_LIMIT')?:25)));
+$limit=max(1,min(300,(int)(getenv('FUNDART_BATCH_LIMIT')?:250)));
 $visited=0;$added=0;$existing=0;$deferred=0;$errors=0;$error_samples=[];
 while($visited<$size && $added<$limit){
  $r=$records[($cursor+$visited)%$size];$visited++;
