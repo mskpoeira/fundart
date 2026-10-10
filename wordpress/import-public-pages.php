@@ -15,6 +15,31 @@ $entries=array_values(array_filter($inventory['urls']??[],static fn($e)=>str_con
 $size=count($entries);
 if($size>0)$entries=array_merge(array_slice($entries,$offset),array_slice($entries,0,$offset));
 $excluded=['carousel-slider','navegador-de-arquivos','galeria'];
+$seed_paths=['tradicao','tradicao/comunidades','tradicao/danca','tradicao/musica'];
+foreach($seed_paths as $seed){
+ if(get_page_by_path($seed,OBJECT,'page'))continue;
+ $parts=explode('/',$seed);$leaf=array_pop($parts);$pid=0;
+ if($parts){$p=get_page_by_path(implode('/',$parts),OBJECT,'page');if(!$p){WP_CLI::log('PARENT_FOR_SEED_MISSING '.$seed);continue;}$pid=(int)$p->ID;}
+ $url='https://fundart.com.br/'.$seed.'/';
+ $res=wp_remote_get($url,['timeout'=>18,'redirection'=>2,'user-agent'=>'FUNDART-TestMigration/1.0']);
+ if(is_wp_error($res)||wp_remote_retrieve_response_code($res)!==200){WP_CLI::log('SEED_NOT_FOUND '.$seed);continue;}
+ $dom=new DOMDocument('1.0','UTF-8');libxml_use_internal_errors(true);
+ $ok=$dom->loadHTML('<?xml encoding="utf-8" ?>'.wp_remote_retrieve_body($res),LIBXML_NONET|LIBXML_NOWARNING|LIBXML_NOERROR);
+ libxml_clear_errors();if(!$ok)continue;
+ $xpath=new DOMXPath($dom);
+ $elements=$xpath->query("//*[contains(concat(' ',normalize-space(@class),' '),' page_content ')]");
+ $heads=$xpath->query('//h1[contains(concat(" ",normalize-space(@class)," ")," page_title ")]');
+ if(!$elements || !$elements->length || !$heads || !$heads->length){WP_CLI::log('SEED_CONTENT_MISSING '.$seed);continue;}
+ $html='';foreach($elements->item(0)->childNodes as $child)$html.=$dom->saveHTML($child);
+ $html=wp_kses_post($html);$title=trim($heads->item(0)->textContent);
+ if(!$title||mb_strlen(wp_strip_all_tags($html))<50){WP_CLI::log('SEED_CONTENT_SHORT '.$seed);continue;}
+ $id=wp_insert_post(['post_type'=>'page','post_status'=>'publish','post_title'=>$title,'post_name'=>$leaf,'post_parent'=>$pid,'post_content'=>$html],true);
+ if(is_wp_error($id)){WP_CLI::log('SEED_FAILED '.$seed);continue;}
+ update_post_meta($id,'_fundart_original_url',$url);
+ update_post_meta($id,'_fundart_migration_status','importado_html_revisao_pendente');
+ WP_CLI::log('SEED_IMPORTED '.$seed.' '.$id);
+}
+
 foreach($entries as $entry){
  $position++;
  if($count>=$limit)break;
