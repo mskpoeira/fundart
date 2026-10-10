@@ -1,0 +1,32 @@
+name: AUDITORIA PROFUNDA FUNDART - Infraestrutura
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-infra-audit.yml"]
+permissions:
+  contents: read
+jobs:
+  infra:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "3m"
+          script: |
+            set -eu
+            for c in fundart-wp-staging-app fundart-wp-staging-db; do
+              docker inspect --format 'AUDIT_CONTAINER {{.Name}} running={{.State.Running}} restarts={{.RestartCount}} oom={{.State.OOMKilled}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}NA{{end}}' "$c"
+            done
+            echo "AUDIT_CADDY_ACTIVE=$(systemctl is-active caddy || true)"
+            docker exec fundart-wp-staging-app php -r 'include "/var/www/html/wp-includes/version.php"; echo "AUDIT_ACTUAL_WORDPRESS=".$wp_version.PHP_EOL;'
+            docker exec fundart-wp-staging-app php -r 'echo "AUDIT_PHP_RUNTIME=".PHP_VERSION.PHP_EOL;foreach(["curl","gd","mbstring","dom","zip"] as $m)echo "AUDIT_MODULE_".$m."=".(extension_loaded($m)?"yes":"no").PHP_EOL;'
+            docker exec fundart-wp-staging-app sh -c 'find /var/www/html/wp-content/uploads -type f 2>/dev/null | wc -l' | xargs -I {} echo "AUDIT_UPLOAD_DISK_FILES={}"
+            echo "AUDIT_BACKUPS_TOTAL=$(find /opt/fundart-secrets/backups -maxdepth 1 -type f 2>/dev/null | wc -l)"
+            echo "AUDIT_RECENT_BACKUPS=$(find /opt/fundart-secrets/backups -maxdepth 1 -type f -mtime -2 2>/dev/null | wc -l)"
+            echo "AUDIT_BACKUPS_NEWEST_EPOCH=$(find /opt/fundart-secrets/backups -maxdepth 1 -type f -printf '%T@\n' 2>/dev/null | sort -nr | head -n1 || true)"
+            df -Pk / | awk 'NR==2{printf "AUDIT_DISK_USED_PERCENT=%.1f\n",100*$3/$2}'
+            echo AUDIT_INFRA_DONE=YES
