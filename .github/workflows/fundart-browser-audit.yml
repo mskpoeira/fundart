@@ -1,0 +1,27 @@
+name: AUDITORIA PROFUNDA FUNDART - Navegador e WCAG
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-browser-audit.yml"]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar navegador de testes
+        run: |
+          npm install --no-save --no-audit --no-fund playwright @axe-core/playwright
+          npx playwright install chromium --with-deps
+      - name: Executar testes somente no navegador, sem submeter dados reais
+        run: |
+          node audit/browser_audit.js | tee browser-audit.jsonl
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fundart-browser-audit
+          path: browser-audit.jsonl
+          if-no-files-found: ignore
+          retention-days: 14
