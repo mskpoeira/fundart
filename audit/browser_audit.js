@@ -16,7 +16,7 @@ const AxeBuilder=require('@axe-core/playwright').default;
    await page.waitForTimeout(600);
    const metrics=await page.evaluate(()=>({scrollWidth:document.documentElement.scrollWidth,viewport:innerWidth,images:[...document.images].filter(x=>!x.complete||x.naturalWidth===0).length,links:document.querySelectorAll('a').length,forms:document.querySelectorAll('form').length}));
    const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).analyze();
-   output.pages[path]={http:r.status(),metrics,axe_violations:axe.violations.map(v=>({rule:v.id,impact:v.impact,nodes:v.nodes.length,first_target:v.nodes[0]?.target?.slice(0,2)})).slice(0,20),axe_incomplete:axe.incomplete.length,errors:errs};
+   output.pages[path]={http:r.status(),metrics,axe_violations:axe.violations.map(v=>({rule:v.id,impact:v.impact,nodes:v.nodes.length,first_target:v.nodes[0]?.target?.slice(0,2),message:v.nodes[0]?.failureSummary?.slice(0,310)})).slice(0,20),axe_incomplete:axe.incomplete.length,errors:errs};
    if(path==='/anexo-ii-ficha-inscricao/'){
     const bank=page.locator('select[name=banco]');const pix=page.locator('input[name=pix]');
     output.interactions.bank_options=await bank.locator('option').count();
@@ -34,7 +34,9 @@ const AxeBuilder=require('@axe-core/playwright').default;
     output.interactions.form_file_input=await page.locator('input[type=file]').count();
    }
    if(path==='/inscricoes-oficinas/'){
-    output.interactions.student_submit_disabled=await page.locator('button:has-text("Inscrições online aguardando autorização")').isDisabled();
+    output.interactions.student_buttons=await page.locator(".fundart-enrollment button").allTextContents();
+    output.interactions.student_disabled_buttons=await page.locator(".fundart-enrollment button[disabled]").count();
+    output.interactions.student_main_excerpt=(await page.locator("main").innerText()).slice(0,420);
    }
   }catch(err){output.pages[path]={error:String(err).slice(0,240),other_errors:errs}}
   await context.close();
