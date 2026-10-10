@@ -60,7 +60,9 @@ function fundart_media_download($source,$maxBytes){
   $code=(int)wp_remote_retrieve_response_code($req);
   if(in_array($code,[301,302,303,307,308],true)){
     $loc=wp_remote_retrieve_header($req,'location');
-    $next=$loc?wp_http_validate_url(WP_Http::make_absolute_url($loc,$current)):'';
+    $loc=trim((string)$loc);
+    $candidate=str_starts_with($loc,'/')?('https://fundart.com.br'.$loc):$loc;
+    $next=$candidate&&filter_var($candidate,FILTER_VALIDATE_URL)?$candidate:'';
     if(!$next||!fundart_media_normalize($next,['jpg','jpeg','png','gif','webp','avif','pdf','doc','docx','odt','xls','xlsx','ods','ppt','pptx','txt','csv','mp3','wav','ogg','mp4'])){$error='Redirect to disallowed URL';break;}
     $current=$next;continue;
   }
