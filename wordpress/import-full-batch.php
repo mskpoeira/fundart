@@ -16,7 +16,7 @@ foreach($inv['urls'] as $entry){
 $records=array_values($records);$size=count($records);
 if(!$size) WP_CLI::error('No valid sources');
 $cursor=(int)get_option('fundart_full_import_cursor',0);
-$limit=max(1,min(120,(int)(getenv('FUNDART_BATCH_LIMIT')?:75)));
+$limit=max(1,min(120,(int)(getenv('FUNDART_BATCH_LIMIT')?:25)));
 $visited=0;$added=0;$existing=0;$deferred=0;$errors=0;$error_samples=[];
 while($visited<$size && $added<$limit){
  $r=$records[($cursor+$visited)%$size];$visited++;
@@ -41,7 +41,7 @@ while($visited<$size && $added<$limit){
  if(!$ok){$errors++;continue;}
  $xp=new DOMXPath($doc);
  $titles=$xp->query('//h1[contains(concat(" ",normalize-space(@class)," ")," page_title ")]|//h1[contains(concat(" ",normalize-space(@class)," ")," post_title ")]');
- $containers=$xp->query("//*[contains(concat(' ',normalize-space(@class),' '),' page_content ') or contains(concat(' ',normalize-space(@class),' '),' post_content ') or contains(concat(' ',normalize-space(@class),' '),' entry-content ')]");
+ $containers=$xp->query("//*[contains(concat(' ',normalize-space(@class),' '),' page_content ') or contains(concat(' ',normalize-space(@class),' '),' post_content ') or contains(concat(' ',normalize-space(@class),' '),' entry-content ') or contains(concat(' ',normalize-space(@class),' '),' single-content ')]");
  if(!$containers||!$containers->length||!$titles||!$titles->length){$errors++;if(count($error_samples)<20)$error_samples[]=$path.':selector';continue;}
  $title=trim($titles->item(0)->textContent);
  if(mb_strlen($title)<3||mb_strlen($title)>220){$errors++;continue;}
