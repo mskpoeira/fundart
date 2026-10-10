@@ -1,0 +1,32 @@
+name: Diagnosticar inventario paginas FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/inspect-pages-manifest.yml"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "4m"
+          script: |
+            python3 - <<'PY'
+            import json,collections
+            data=json.load(open('/opt/fundart-secrets/migration/sitemap-inventory.json'))
+            print('ROOT_TYPE',type(data).__name__,'KEYS',list(data.keys()) if isinstance(data,dict) else 'list')
+            urls=data.get('urls',[]) if isinstance(data,dict) else data
+            print('URL_COUNT',len(urls))
+            print('SAMPLE_RECORDS',[(str(x.get('path',''))[:95],str(x.get('sitemap',''))[:65]) for x in urls[:6]])
+            groups=collections.Counter(str(x.get('sitemap','')).split('/')[-1] for x in urls if 'page-sitemap' in str(x.get('sitemap','')))
+            print('PAGE_MAPS',groups.most_common(15))
+            pages=[x for x in urls if 'page-sitemap' in str(x.get('sitemap',''))]
+            print('PAGE_COUNT',len(pages))
+            print('PATH_SAMPLES',[(str(x.get('path',''))[:95],str(x.get('sitemap','')).split('/')[-1]) for x in pages[25:65]])
+            PY
