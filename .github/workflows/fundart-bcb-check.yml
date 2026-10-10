@@ -1,0 +1,31 @@
+name: Validar lista BCB no Anexo II
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-bcb-check.yml"]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Conferir lista
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 40 https://fundart.mskpoeira.com.br/anexo-ii-ficha-inscricao/ -o /tmp/banks.html
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          class P(HTMLParser):
+              active=False
+              options=[]
+              def handle_starttag(self,tag,attrs):
+                  a=dict(attrs)
+                  if tag=='select' and a.get('name')=='banco':self.active=True
+                  elif tag=='option' and self.active:self.options.append(a.get('value',''))
+              def handle_endtag(self,tag):
+                  if tag=='select':self.active=False
+          p=P();p.feed(open('/tmp/banks.html').read())
+          print('BANK_OPTIONS=',len(p.options))
+          print('SAMPLE=',p.options[:4])
+          if len(p.options)<8:raise SystemExit('BCB bank list empty or incomplete')
+          PY
