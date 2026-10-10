@@ -20,6 +20,17 @@ jobs:
           script: |
             set -eu
             cd /opt/fundart
+            test -s /opt/fundart-secrets/migration/sitemap-inventory.json
+            chmod 644 /opt/fundart-secrets/migration/sitemap-inventory.json
+            mkdir -p /opt/fundart-secrets/backups
+            set -a
+            . /opt/fundart-secrets/wordpress-staging.env
+            set +a
+            backup="/opt/fundart-secrets/backups/pre-page-import-$(date +%Y%m%d-%H%M%S).sql"
+            docker exec -e MYSQL_PWD="$FUNDART_STAGING_ROOT_PASSWORD" fundart-wp-staging-db mariadb-dump -uroot --single-transaction fundart_wp > "$backup"
+            test -s "$backup"
+            chmod 600 "$backup"
+            echo BACKUP=OK
             git fetch -q origin main
             git show origin/main:wordpress/import-public-pages.php > wordpress/import-public-pages.php
             chmod 644 wordpress/import-public-pages.php
