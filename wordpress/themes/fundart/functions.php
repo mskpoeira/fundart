@@ -52,7 +52,7 @@ function fundart_original(string $path=''): string {
   return esc_url($url);
 }
 function fundart_home_items(string $post_type,int $limit=4): WP_Query {
-  return new WP_Query(['post_type'=>$post_type,'post_status'=>'publish','posts_per_page'=>$limit,'ignore_sticky_posts'=>true]);
+  return new WP_Query(['post_type'=>$post_type,'post_status'=>'publish','posts_per_page'=>$limit,'orderby'=>['date'=>'DESC','ID'=>'DESC'],'ignore_sticky_posts'=>true]);
 }
 function fundart_link_current_or_legacy(string $type,string $legacy): string {
   return post_type_exists($type) ? esc_url(get_post_type_archive_link($type) ?: fundart_original($legacy)) : fundart_original($legacy);
@@ -89,7 +89,7 @@ add_shortcode('fundart_acervo',function():string {
   $type=isset($_GET['acervo_tipo'])?sanitize_key(wp_unslash($_GET['acervo_tipo'])):'';
   $allowed=['page','post','fundart_edital','fundart_evento','fundart_oficina','fundart_conselho'];
   if(!in_array($type,$allowed,true))$type='';
-  $args=['post_type'=>$type?:$allowed,'post_status'=>'publish','posts_per_page'=>60,'paged'=>max(1,(int)(get_query_var('paged')?:($_GET['pagina']??1))),'orderby'=>'date','order'=>'DESC','ignore_sticky_posts'=>true];
+  $args=['post_type'=>$type?:$allowed,'post_status'=>'publish','posts_per_page'=>60,'paged'=>max(1,(int)(get_query_var('paged')?:($_GET['pagina']??1))),'orderby'=>['date'=>'DESC','ID'=>'DESC'],'ignore_sticky_posts'=>true];
   if($search!=='')$args['s']=$search;
   $query=new WP_Query($args);
   $action=get_permalink();
@@ -126,3 +126,12 @@ add_filter('wp_nav_menu_items',function(string $items,$args):string{
   }
   return $items;
 },20,2);
+
+/** Aplica ordem cronológica decrescente às listagens nativas de notícias. */
+add_action('pre_get_posts',static function(WP_Query $query):void {
+  if (is_admin() || !$query->is_main_query()) return;
+  if ($query->is_home() || $query->is_category() || $query->is_tag() || $query->is_date() || $query->is_author()) {
+    $query->set('orderby',['date'=>'DESC','ID'=>'DESC']);
+    $query->set('ignore_sticky_posts',true);
+  }
+});
