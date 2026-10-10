@@ -21,5 +21,9 @@ jobs:
             for p in list(h.parents)[:5]:print('PARENT',p.name,p.get('class'),p.get('id'))
           for x in s.select('article,.page_content,.post_content,.entry-content,.single_post,.post_body,.content_post')[:12]:
             print('ELEMENT',x.name,x.get('class'),x.get('id'),'TEXTLEN',len(x.get_text(' ',strip=True)),'PREVIEW',x.get_text(' ',strip=True)[:220])
+          for p in s.select('p')[:16]:
+            t=p.get_text(' ',strip=True)
+            if len(t)>80:
+              print('PARAGRAPH',t[:100],[(a.name,a.get('class'),a.get('id')) for a in list(p.parents)[:5]])
           print('TITLE',s.title.get_text(' ',strip=True)[:160] if s.title else 'none')
           PY
