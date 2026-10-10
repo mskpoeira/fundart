@@ -9,7 +9,7 @@ $manifest='/manifest.json';
 if(!is_readable($manifest))WP_CLI::error('Inventario ausente');
 $inventory=json_decode(file_get_contents($manifest),true);
 if(!is_array($inventory))WP_CLI::error('Inventario invalido');
-$limit=30;$count=0;$skipped=0;$failed=0;$deferred=0;
+$limit=20;$count=0;$skipped=0;$failed=0;$deferred=0;
 $offset=max(0,(int)get_option('fundart_import_page_cursor',0));$position=0;
 $entries=array_values(array_filter($inventory['urls']??[],static fn($e)=>str_contains((string)($e['sitemap']??''),'page-sitemap') && preg_match('~^/[a-z0-9][a-z0-9/-]*/$~i',(string)($e['path']??''))));
 $size=count($entries);
@@ -29,14 +29,14 @@ foreach($entries as $entry){
   $parts=explode('/',$slug);
   $leaf=array_pop($parts);
   $parent=get_page_by_path(implode('/',$parts),OBJECT,'page');
-  if(!$parent || $parent->post_status!=='publish'){$deferred++;continue;}
+  if(!$parent || $parent->post_status!=='publish'){$deferred++;WP_CLI::log('PARENT_PENDING '.trim($path,'/'));continue;}
   $parent_id=(int)$parent->ID;
   $slug=$leaf;
  }
  $full_path=trim($path,'/');
  if(get_page_by_path($full_path,OBJECT,'page')){$skipped++;continue;}
  $response=wp_remote_get($source,['timeout'=>16,'redirection'=>2,'user-agent'=>'FUNDART-TestMigration/1.0']);
- if(is_wp_error($response)||wp_remote_retrieve_response_code($response)!==200){$failed++;continue;}
+ if(is_wp_error($response)||wp_remote_retrieve_response_code($response)!==200){$failed++;WP_CLI::log('FETCH_FAILED '.trim($path,'/'));continue;}
  $raw=wp_remote_retrieve_body($response);
  if(strlen($raw)>1800000||strlen($raw)<400){$failed++;continue;}
  $dom=new DOMDocument('1.0','UTF-8');
