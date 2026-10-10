@@ -1,4 +1,4 @@
-name: AUDITORIA PROFUNDA FUNDART - Navegador e WCAG
+name: AUDITORIA PROFUNDA FUNDART - Navegador e WCAG (reteste)
 on:
   push:
     branches: [main]
