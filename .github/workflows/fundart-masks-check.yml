@@ -1,0 +1,22 @@
+name: Verificar mascaras formularios FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-masks-check.yml"]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Testar HTML publico
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://fundart.mskpoeira.com.br/anexo-ii-ficha-inscricao/ -o /tmp/anexo.html
+          curl -fsSL --retry 3 --max-time 30 https://fundart.mskpoeira.com.br/inscricoes-oficinas/ -o /tmp/aluno.html
+          grep -Fq 'data-anexo="ii"' /tmp/anexo.html
+          grep -Fq 'fda-file-input' /tmp/anexo.html
+          grep -Fq 'fdaMask' /tmp/anexo.html
+          grep -Fq 'fundart-enrollment' /tmp/aluno.html
+          grep -Fq 'fdaMask' /tmp/aluno.html
+          echo MASKS_PRESENT_IN_BOTH_FORMS=YES
