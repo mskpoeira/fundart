@@ -33,7 +33,7 @@ function fdo_classify(string $title):string{
 }
 function fdo_listing(string $group):string{
  $groups=fdo_groups();if(!isset($groups[$group]))return '';
- $types=$group==='noticias'?['post']:($group==='eventos'?['fundart_evento']:($group==='oficinas'?['fundart_oficina']:($group==='conselhos'?['fundart_conselho']:['fundart_edital','post']));
+ $types=match($group){'noticias'=>['post'],'eventos'=>['fundart_evento'],'oficinas'=>['fundart_oficina'],'conselhos'=>['fundart_conselho'],default=>['fundart_edital','post']};
  $page=max(1,min(9999,(int)($_GET['pagina']??1)));
  $q=new WP_Query(['post_type'=>$types,'post_status'=>'publish','posts_per_page'=>-1,'fields'=>'ids','orderby'=>['date'=>'DESC','ID'=>'DESC'],'ignore_sticky_posts'=>true,'no_found_rows'=>true]);
  $ids=[];
