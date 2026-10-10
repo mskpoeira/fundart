@@ -1,0 +1,65 @@
+name: FUNDART Publicar Anexos II a VI
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-anexos-deploy.yml"]
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "10m"
+          script: |
+            set -Eeuo pipefail
+            umask 077
+            cd /opt/fundart
+            test "$(docker inspect -f '{{.State.Running}}' fundart-wp-staging-app)" = true
+            set -a
+            . /opt/fundart-secrets/wordpress-staging.env
+            set +a
+            mkdir -p /opt/fundart-secrets/backups
+            DUMP="/opt/fundart-secrets/backups/before-annexes-$(date +%Y%m%d-%H%M%S).sql"
+            docker exec -e MYSQL_PWD="$FUNDART_STAGING_ROOT_PASSWORD" fundart-wp-staging-db mariadb-dump -uroot --single-transaction fundart_wp > "$DUMP"
+            test -s "$DUMP"
+            chmod 600 "$DUMP"
+            echo "BACKUP=OK"
+            git fetch -q origin main
+            install -d -m 755 wordpress/plugins/fundart-anexos
+            git show origin/main:wordpress/plugins/fundart-anexos/fundart-anexos.php > wordpress/plugins/fundart-anexos/fundart-anexos.php
+            git show origin/main:wordpress/setup-annexes.php > wordpress/setup-annexes.php
+            chmod 644 wordpress/plugins/fundart-anexos/fundart-anexos.php wordpress/setup-annexes.php
+            docker exec fundart-wp-staging-app mkdir -p /var/www/html/wp-content/plugins/fundart-anexos
+            docker cp wordpress/plugins/fundart-anexos/fundart-anexos.php fundart-wp-staging-app:/var/www/html/wp-content/plugins/fundart-anexos/fundart-anexos.php
+            docker exec fundart-wp-staging-app php -l /var/www/html/wp-content/plugins/fundart-anexos/fundart-anexos.php
+            docker run --rm --network fundart-wordpress-staging_fundart_staging_internal --user 33:33 \
+              --mount type=volume,src=fundart-wordpress-staging_fundart_staging_wp,dst=/var/www/html \
+              --mount type=bind,src=/opt/fundart/wordpress/themes/fundart,dst=/var/www/html/wp-content/themes/fundart,readonly \
+              --mount type=bind,src=/opt/fundart/wordpress/setup-annexes.php,dst=/setup-annexes.php,readonly \
+              -e WORDPRESS_DB_HOST=database:3306 -e WORDPRESS_DB_NAME=fundart_wp \
+              -e WORDPRESS_DB_USER=fundart_wp -e WORDPRESS_DB_PASSWORD="$FUNDART_STAGING_DB_PASSWORD" \
+              -e WORDPRESS_TABLE_PREFIX=fdt_ \
+              -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
+              wordpress:cli-php8.3 wp --path=/var/www/html plugin activate fundart-anexos
+            docker run --rm --network fundart-wordpress-staging_fundart_staging_internal --user 33:33 \
+              --mount type=volume,src=fundart-wordpress-staging_fundart_staging_wp,dst=/var/www/html \
+              --mount type=bind,src=/opt/fundart/wordpress/themes/fundart,dst=/var/www/html/wp-content/themes/fundart,readonly \
+              --mount type=bind,src=/opt/fundart/wordpress/setup-annexes.php,dst=/setup-annexes.php,readonly \
+              -e WORDPRESS_DB_HOST=database:3306 -e WORDPRESS_DB_NAME=fundart_wp \
+              -e WORDPRESS_DB_USER=fundart_wp -e WORDPRESS_DB_PASSWORD="$FUNDART_STAGING_DB_PASSWORD" \
+              -e WORDPRESS_TABLE_PREFIX=fdt_ \
+              -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
+              wordpress:cli-php8.3 wp --path=/var/www/html eval-file /setup-annexes.php
+            for slug in anexo-ii-ficha-inscricao anexo-iii-plano-trabalho anexo-iv-capacidade-tecnica anexo-v-fato-impeditivo anexo-vi-recurso; do
+              curl -fsSL --max-time 14 "https://fundart.mskpoeira.com.br/$slug/" -o "/tmp/$slug.html"
+              grep -q 'fda-print' "/tmp/$slug.html"
+              grep -q 'fda-download' "/tmp/$slug.html"
+              echo "$slug=OK"
+            done
+            echo "FIVE_ANNEXES_DEPLOY=OK"
