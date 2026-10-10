@@ -1,0 +1,44 @@
+name: AUDITORIA PROFUNDA FUNDART - Sintaxe e integridade codigo
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-static-audit.yml"]
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Versoes de interpretadores
+        run: |
+          php -v | head -1
+          node -v
+      - name: Lint completo dos arquivos PHP do projeto
+        run: |
+          set -e
+          total=0
+          while IFS= read -r -d '' file; do
+            php -l "$file" >/dev/null || exit 1
+            total=$((total+1))
+          done < <(find wordpress -type f -name '*.php' -print0)
+          echo "AUDIT_PHP_FILES_OK=$total"
+      - name: Verificar JavaScript proprio do tema
+        run: |
+          node --check wordpress/themes/fundart/assets/js/theme.js
+          node --check audit/browser_audit.js
+          echo AUDIT_JS_SYNTAX_OK=YES
+      - name: Mapear workflows que podem alterar proxy ou ambientes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          files=list(Path('.github/workflows').glob('*.yml'))
+          risky=[]
+          for p in files:
+              s=p.read_text()
+              if 'systemctl reload caddy' in s or 'docker compose' in s or 'caddy validate' in s:
+                  risky.append(p.name)
+          print('AUDIT_WORKFLOWS_TOTAL=',len(files))
+          print('AUDIT_INFRA_WRITER_WORKFLOWS=',','.join(risky))
+          PY
