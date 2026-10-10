@@ -9,7 +9,8 @@ $manifest='/manifest.json';
 if(!is_readable($manifest))WP_CLI::error('Inventario ausente');
 $inventory=json_decode(file_get_contents($manifest),true);
 if(!is_array($inventory))WP_CLI::error('Inventario invalido');
-$limit=25;$count=0;$skipped=0;$failed=0;
+$limit=35;$count=0;$skipped=0;$failed=0;
+$excluded=['carousel-slider','navegador-de-arquivos','galeria'];
 foreach($inventory['urls']??[] as $entry){
  if($count>=$limit)break;
  $source=(string)($entry['url']??'');
@@ -17,6 +18,7 @@ foreach($inventory['urls']??[] as $entry){
  $map=(string)($entry['sitemap']??'');
  if(!str_contains($map,'page-sitemap')||!preg_match('~^/[a-z0-9][a-z0-9/-]*/$~i',$path))continue;
  $slug=trim($path,'/');
+ if(in_array($slug,$excluded,true)){$skipped++;continue;}
  if(str_contains($slug,'/'))continue; // hierarchical URL requires separately verified parents
  if(get_page_by_path($slug,OBJECT,'page')){$skipped++;continue;}
  $response=wp_remote_get($source,['timeout'=>16,'redirection'=>2,'user-agent'=>'FUNDART-TestMigration/1.0']);
