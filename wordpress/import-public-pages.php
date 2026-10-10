@@ -9,9 +9,14 @@ $manifest='/manifest.json';
 if(!is_readable($manifest))WP_CLI::error('Inventario ausente');
 $inventory=json_decode(file_get_contents($manifest),true);
 if(!is_array($inventory))WP_CLI::error('Inventario invalido');
-$limit=20;$count=0;$skipped=0;$failed=0;
+$limit=30;$count=0;$skipped=0;$failed=0;$deferred=0;
+$offset=max(0,(int)get_option('fundart_import_page_cursor',0));$position=0;
+$entries=array_values(array_filter($inventory['urls']??[],static fn($e)=>str_contains((string)($e['sitemap']??''),'page-sitemap') && preg_match('~^/[a-z0-9][a-z0-9/-]*/$~i',(string)($e['path']??''))));
+$size=count($entries);
+if($size>0)$entries=array_merge(array_slice($entries,$offset),array_slice($entries,0,$offset));
 $excluded=['carousel-slider','navegador-de-arquivos','galeria'];
-foreach($inventory['urls']??[] as $entry){
+foreach($entries as $entry){
+ $position++;
  if($count>=$limit)break;
  $source=(string)($entry['url']??'');
  $path=(string)($entry['path']??'');
@@ -24,7 +29,7 @@ foreach($inventory['urls']??[] as $entry){
   $parts=explode('/',$slug);
   $leaf=array_pop($parts);
   $parent=get_page_by_path(implode('/',$parts),OBJECT,'page');
-  if(!$parent || $parent->post_status!=='publish')continue;
+  if(!$parent || $parent->post_status!=='publish'){$deferred++;continue;}
   $parent_id=(int)$parent->ID;
   $slug=$leaf;
  }
@@ -59,4 +64,5 @@ foreach($inventory['urls']??[] as $entry){
  $count++;
  WP_CLI::log('IMPORTED '.$full_path.' '.$id);
 }
-WP_CLI::success('NEW_PAGES='.$count.' EXISTING_SKIPPED='.$skipped.' NOT_IMPORTED='.$failed);
+if($size>0)update_option('fundart_import_page_cursor',($offset+$position)%$size,false);
+WP_CLI::success('NEW_PAGES='.$count.' EXISTING_SKIPPED='.$skipped.' NOT_IMPORTED='.$failed.' PARENT_PENDING='.$deferred.' CURSOR='.($size?($offset+$position)%$size:0).' ELIGIBLE='.$size);
