@@ -1,4 +1,4 @@
-name: Importacao FUNDART - ciclo 3 subpaginas
+name: Importacao FUNDART - ciclo 4 cursor
 on:
   push:
     branches: [main]
@@ -47,4 +47,4 @@ jobs:
               -e WORDPRESS_TABLE_PREFIX=fdt_ \
               -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
               wordpress:cli-php8.3 wp --path=/var/www/html eval-file /import.php
-            echo CYCLE_3_COMPLETED=YES
+            echo CYCLE_4_COMPLETED=YES
