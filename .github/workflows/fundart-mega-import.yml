@@ -1,0 +1,51 @@
+name: FUNDART mega importacao - paginas e noticias
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fundart-mega-import.yml"
+permissions:
+  contents: read
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.40.81
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: "120s"
+          command_timeout: "10m"
+          script: |
+            set -eu
+            cd /opt/fundart
+            test -s /opt/fundart-secrets/migration/sitemap-inventory.json
+            chmod 644 /opt/fundart-secrets/migration/sitemap-inventory.json
+            mkdir -p /opt/fundart-secrets/backups
+            set -a
+            . /opt/fundart-secrets/wordpress-staging.env
+            set +a
+            backup="/opt/fundart-secrets/backups/pre-page-import-$(date +%Y%m%d-%H%M%S).sql"
+            docker exec -e MYSQL_PWD="$FUNDART_STAGING_ROOT_PASSWORD" fundart-wp-staging-db mariadb-dump -uroot --single-transaction fundart_wp > "$backup"
+            test -s "$backup"
+            chmod 600 "$backup"
+            echo BACKUP=OK
+            git fetch -q origin main
+            git show origin/main:wordpress/import-full-batch.php > wordpress/import-full-batch.php
+            chmod 644 wordpress/import-full-batch.php
+            set -a
+            . /opt/fundart-secrets/wordpress-staging.env
+            set +a
+            docker run --rm --network fundart-wordpress-staging_fundart_staging_internal --user 33:33 \
+              --mount type=volume,src=fundart-wordpress-staging_fundart_staging_wp,dst=/var/www/html \
+              --mount type=bind,src=/opt/fundart/wordpress/themes/fundart,dst=/var/www/html/wp-content/themes/fundart,readonly \
+              --mount type=bind,src=/opt/fundart/wordpress/import-full-batch.php,dst=/import.php,readonly \
+              --mount type=bind,src=/opt/fundart-secrets/migration/sitemap-inventory.json,dst=/manifest.json,readonly \
+              -e WORDPRESS_DB_HOST=database:3306 -e WORDPRESS_DB_NAME=fundart_wp \
+              -e WORDPRESS_DB_USER=fundart_wp -e WORDPRESS_DB_PASSWORD="$FUNDART_STAGING_DB_PASSWORD" \
+              -e WORDPRESS_TABLE_PREFIX=fdt_ \
+              -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
+              wordpress:cli-php8.3 wp --path=/var/www/html eval-file /import.php
+            echo FIRST_BATCH_DONE=YES
+            echo MEGA_IMPORT_BATCH=OK
