@@ -1,4 +1,4 @@
-name: FUNDART - Organizar Editais e Navegacao
+name: FUNDART - Organizar Editais e Navegacao (reteste)
 on:
   push:
     branches: [main]
