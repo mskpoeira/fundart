@@ -1,4 +1,4 @@
-name: FUNDART mega importacao - paginas e noticias
+name: FUNDART mega importacao - noticias corrigidas
 on:
   push:
     branches: [main]
@@ -48,4 +48,4 @@ jobs:
               -e WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://fundart.mskpoeira.com.br');define('WP_SITEURL','https://fundart.mskpoeira.com.br');" \
               wordpress:cli-php8.3 wp --path=/var/www/html eval-file /import.php
             echo FIRST_BATCH_DONE=YES
-            echo MEGA_IMPORT_BATCH=OK
+            echo NEWS_SELECTOR_FIXED_BATCH=OK
