@@ -1,0 +1,25 @@
+name: Examinar HTML de noticias FUNDART
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fundart-inspect-post-html.yml"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          python -m pip install --quiet beautifulsoup4
+          python - <<'PY'
+          import requests,bs4
+          u='https://fundart.com.br/projeto-guri-abre-inscricoes-para-segundo-semestre-de-2016/'
+          r=requests.get(u,timeout=35);print('STATUS',r.status_code,'SIZE',len(r.content))
+          s=bs4.BeautifulSoup(r.text,'html.parser')
+          for h in s.select('h1')[:4]:
+            print('H1',h.get('class'),h.get_text(' ',strip=True)[:140])
+            for p in list(h.parents)[:5]:print('PARENT',p.name,p.get('class'),p.get('id'))
+          for x in s.select('article,.page_content,.post_content,.entry-content,.single_post,.post_body,.content_post')[:12]:
+            print('ELEMENT',x.name,x.get('class'),x.get('id'),'TEXTLEN',len(x.get_text(' ',strip=True)),'PREVIEW',x.get_text(' ',strip=True)[:220])
+          print('TITLE',s.title.get_text(' ',strip=True)[:160] if s.title else 'none')
+          PY
