@@ -6,7 +6,8 @@ const AxeBuilder=require('@axe-core/playwright').default;
  const output={pages:{},interactions:{},errors:[]};
  const targets=['/','/acervo/','/a-fundart/','/ouvidoria/','/anexo-ii-ficha-inscricao/','/anexo-iii-plano-trabalho/','/inscricoes-oficinas/','/credenciamento-arte-educadores/'];
  for(const path of targets){
-  const page=await browser.newPage({viewport:{width:1366,height:768}});
+  const context=await browser.newContext({viewport:{width:1366,height:768}});
+  const page=await context.newPage();
   const errs=[];
   page.on('pageerror',err=>errs.push('JS: '+String(err.message).slice(0,170)));
   page.on('console',msg=>{if(msg.type()==='error')errs.push('console: '+msg.text().slice(0,140))});
@@ -36,10 +37,11 @@ const AxeBuilder=require('@axe-core/playwright').default;
     output.interactions.student_submit_disabled=await page.locator('button:has-text("Inscrições online aguardando autorização")').isDisabled();
    }
   }catch(err){output.pages[path]={error:String(err).slice(0,240),other_errors:errs}}
-  await page.close();
+  await context.close();
  }
  for(const width of [375,768]){
-  const page=await browser.newPage({viewport:{width,height:800},isMobile:width===375,deviceScaleFactor:1});
+  const context=await browser.newContext({viewport:{width,height:800},isMobile:width===375,deviceScaleFactor:1});
+  const page=await context.newPage();
   try{
    await page.goto(base+'/',{waitUntil:'domcontentloaded',timeout:35000});
    output.interactions['viewport_'+width]=await page.evaluate(()=>({documentWidth:document.documentElement.scrollWidth,windowWidth:innerWidth,menuToggleVisible:(()=>{const x=document.querySelector('.menu-toggle');return !!x && getComputedStyle(x).display!=='none'})()}));
@@ -47,7 +49,7 @@ const AxeBuilder=require('@axe-core/playwright').default;
     const btn=page.locator('.menu-toggle');await btn.click();output.interactions.mobile_nav_expanded=await btn.getAttribute('aria-expanded');
    }
   }catch(e){output.interactions['viewport_'+width]={error:String(e).slice(0,200)}}
-  await page.close();
+  await context.close();
  }
  await browser.close();
  console.log('BROWSER_AUDIT_JSON='+JSON.stringify(output));
